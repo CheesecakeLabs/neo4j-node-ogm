@@ -16,7 +16,7 @@ jobs:
           - v1-dependencies-{{ checksum "package.json" }}
 
       - run: npm install
-      - run: npm test
+      - run: npm run test
 
       - save_cache:
           paths:
@@ -34,6 +34,7 @@ jobs:
       - run:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/repo/.npmrc
+      - run: npm run build
       - run:
           name: Publish package
           command: npm publish

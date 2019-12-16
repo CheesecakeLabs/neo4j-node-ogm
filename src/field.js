@@ -1,11 +1,17 @@
 import md5 from 'crypto-js/md5'
 
 class Field {
+  /**
+   * Constructor
+   *
+   * @param {Object} config
+   */
   constructor (config = {}) {
     // remove undefined configs to be overwrite by default config
     Object.keys(config).forEach(key => {
       config[key] === undefined && delete config[key]
     })
+    // create default configs
     config = Object.assign({
       isModel: false,
       isArray: false,

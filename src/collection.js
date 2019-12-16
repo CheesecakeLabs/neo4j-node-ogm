@@ -9,9 +9,12 @@ class Collection extends Array {
 
   async deleteAll () {
     return Promise.all(this.map(item => item.delete()))
-    // this.forEach(item => {
-    //   item.delete()
-    // })
+  }
+
+  pushAll (values) {
+    values.forEach(item => {
+      this.push(item)
+    })
   }
 }
 

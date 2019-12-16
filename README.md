@@ -1,5 +1,5 @@
 # Neo4j Node OGM
-**THIS IS A WORK IN PROGRESS** not ready for use yet
+**THIS IS A WORK IN PROGRESS** not ready for production
 
 Neo4j OGM for Node JS is designed to take care of the CRUD boilerplate involved with setting up a neo4j project with NodeJS. Just install, set up your models and go.
 ## Usage Instructions
@@ -15,8 +15,12 @@ NEO4J_PORT=7687
 ## Cypher Builder
 At first, you can only do raw cyphers
 ```
+import { getConnection } from 'neo4j-node-ogm'
+
+const database = getConnection()
+
 try {
-  const result = await neo4j.cypher('MATCH (users:Users {name : $nameParam}) RETURN users', {
+  const result = await database.cypher('MATCH (users:Users {name : $nameParam}) RETURN users', {
     nameParam: 'Natam'
   })
   result.records.forEach(record => {
@@ -28,6 +32,8 @@ try {
 ```
 #### Modeling
 ```
+import { Model, Field } from 'neo4j-node-ogm'
+
 class Text extends Model {
   _labels = ['Text']
   _attributes = {
@@ -128,7 +134,7 @@ const users = User.findBy([
 //or feel free to get the info
 const users = User.findAll() //return Collection of Node
 users.forEach(user => {
-    const friends = user.friends.findAll()
+    const friends = await user.friends
 })
 ```
 
@@ -160,16 +166,11 @@ if(user){
 
 #### Deleting Collection
 ```
-const user = await User.findAll() //return Collection
-await user.deleteAll()
+const users = await User.findAll() //return Collection
+await users.deleteAll()
 ```
 
 ## API
-Model sync functions:
-* with(Array fields)
-  * the attributes that are Relationships are not selected by default so you can say what you wanted to be selected in that Match
-  * the values can be concatenated with __ and that represents a children Relationship that should be added to that Match
-* setValue(attribute, value) - return void, used to set a new value to Model
 
 Model async functions:
 * findAll({ with_related, filterAttributes, skip, limit }) - return a Node's Collection
@@ -182,13 +183,23 @@ Model async functions:
 
 Fields type:
 * **.String(Object args)**
+  * min_length
   * max_length
   * required
   * valid
   * default
+  * get
+  * set
 * **.Integer(Object args)** - Since Integers can be larger than can be represented as JavaScript numbers, it is only safe to convert to JavaScript numbers if you know that they will not exceed (2^53) in size.
   * required
   * default
+  * get
+  * set
+* **.Float(Object args)**
+  * required
+  * default
+  * get
+  * set
 * **.Hash(Object args)**
   * required
 * **.JSON(Object args)**
@@ -197,19 +208,26 @@ Fields type:
 * **.Boolean(Object args)**
   * default
 * **.DateTime(Object args)**
+  * required
   * default
 * **.Date(Object args)**
+  * required
   * default
 * **.Time(Object args)**
+  * required
   * default
 * **.Relationship(Object args)**
   * target
   * labels
   * attributes
+  * filter_relationship
+  * filter_node
 * **.Relationships(Object args)**
   * target
   * labels
   * attributes
+  * filter_relationship
+  * filter_node
 
 #### Options description
 
@@ -221,6 +239,7 @@ Fields type:
 | filter_relationship | Object | This object is used to filter(where) at relations and will be applied at relationship | ` filter_relationship: { language: 'en_US' } ` |
 | get | Function | A function to override the get attribute of the Model | ```get: (value) => { return `key-${value}` }``` |
 | labels | Array | This array can be at Model (starts with _ ex: _labels) or a Field Relationship to define the `:LABELS` at neo4j | `labels = ['Role']` |
+| min_length | Integer | Define the min length of caracteres of the field | `min_length: 3` |
 | max_length | Integer | Define the max length of caracteres of the field | `max_length: 255` |
 | required | Boolean | Validation to force a attribute to be required ( != undefined/null/'' ) | `required: true` |
 | set | Function | A function to override the set attribute of the Model | `set: (value) => { return value.toUpperCase() }` |

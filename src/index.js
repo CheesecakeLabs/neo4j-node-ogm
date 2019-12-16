@@ -1,9 +1,9 @@
-import { Model } from './Model'
-import { Field } from './Field'
-import { createConnection } from './Driver'
+import { Model } from './model'
+import { Field } from './field'
+import { getConnection } from './driver'
 
 export {
   Model,
   Field,
-  createConnection
+  getConnection
 }

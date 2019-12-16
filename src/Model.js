@@ -1,16 +1,17 @@
-import { createConnection } from './Driver.js'
-import { Cypher } from './Cypher.js'
-import { Collection } from './Collection.js'
+import { getConnection } from './driver'
+import { Cypher } from './cypher'
+import { Collection } from './collection'
 
 class Model {
+  /**
+   * Constructor
+   *
+   * @param {Object} values
+  */
   constructor (values = {}) {
-    this._driver = createConnection()
+    this._driver = getConnection()
     this._with = []
     this._values = values
-  }
-
-  set (key, value) {
-    this[key] = value
   }
 
   convertID ({ low, high }) {
@@ -59,10 +60,19 @@ class Model {
     return Object.entries(this._attributes)
   }
 
-  checkWith (level, nodeName, witha = false) {
+  /**
+   * Check the wih_related if have permission at determined level
+   *
+   * @param {Integer} level
+   * @param {String} nodeName
+   * @param {Boolean} overwriteWith
+   */
+  checkWith (level, nodeName, overwriteWith = false) {
     let ret = false
-    if (!witha) witha = this._with
-    witha.forEach(item => {
+    // by default the with_related is on this._with
+    if (!overwriteWith) overwriteWith = this._with
+    overwriteWith.forEach(item => {
+      // found the attr named as model attribute
       if (item[level] === nodeName) {
         ret = true
       }
@@ -103,6 +113,18 @@ class Model {
     return true
   }
 
+  createOnlyGetter (model, fieldName, fget = (value) => value) {
+    Object.defineProperty(model, fieldName, {
+      get: function () {
+        const value = fget(model._values[fieldName])
+        return value
+      },
+      set: function (newValue) {
+        return false
+      }
+    })
+  }
+
   createGetterAndSetter (model, fieldName, fset = (value) => value, fget = (value) => value) {
     Object.defineProperty(model, fieldName, {
       get: function () {
@@ -119,12 +141,13 @@ class Model {
   hydrate (model, dataJSON, isArray = false, level = 0) {
     if (dataJSON) {
       Object.entries(model._attributes).forEach(([key, attr]) => {
-        // create getter and setter for that attribute inside _values
-        this.createGetterAndSetter(model, key, attr.set, attr.get)
         // if is model should hydrate with the right class
         if (attr.isModel) {
+          // with_related is ok, so there is information to hydrate
           if (this.checkWith(level, key)) {
             if (Array.isArray(dataJSON[key])) {
+              // create getter and setter for that attribute inside _values
+              this.createGetterAndSetter(model, key, attr.set, attr.get)
               // if is array should create the key as array and push for each record
               model[key] = []
               dataJSON[key].forEach(data => {
@@ -137,26 +160,29 @@ class Model {
                 // array should be pushed
                 model._values[key].push(hydrated)
               } else {
-                // if not the model should be linked at _values
+                // create getter and setter for that attribute inside _values
+                this.createGetterAndSetter(model, key, attr.set, attr.get)
+                // if not array should be linked at _values directed
                 model._values[key] = hydrated
               }
             }
+          } else {
+            // is not related, so we should hydrate with target model
+            // that way the attribute is executed a match when accessed
+            // TODO: create a getter function to get only children nodes
+            this.createOnlyGetter(model, key, (value) => value)
+            model._values[key] = attr.target
           }
         } else {
+          // create getter and setter for that attribute inside _values
+          this.createGetterAndSetter(model, key, attr.set, attr.get)
           // just a value of the model
           model._values[key] = dataJSON[key]
         }
       })
       // create only getter for id
       model._values.id = dataJSON.id
-      Object.defineProperty(model, 'id', {
-        get: function () {
-          return model.convertID(model._values.id)
-        },
-        set: function (newValue) {
-          return false
-        }
-      })
+      this.createOnlyGetter(model, 'id', model.convertID)
     }
 
     return model
@@ -201,7 +227,7 @@ class Model {
         }
       })
       const data = await this.cypher.create(this.getCypherName(), this._driver)
-      this.set('id', this.convertID(data))
+      this.id = this.convertID(data)
     }
   }
 

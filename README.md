@@ -58,7 +58,7 @@ class Role extends Model {
     name: Field.Relationship({
       with: true,
       labels: ['TRANSLATE'],
-      target: new Text(),
+      target: Text,
       filter_relationship: {
         language: 'en_US'
       }
@@ -79,7 +79,7 @@ class User extends Model {
     }),
     role: Field.Relationship({
       labels: ['HAS_ROLE'],
-      target: new Role(),
+      target: Role,
     }), // role : { label: 'HAS_ROLE': children: Node }
     friends: Field.Relationships({
       labels: ['FRIENDSHIP'],
@@ -94,28 +94,36 @@ class User extends Model {
 
 #### findAll
 ```
-//return Collection of Nodes by default relations are not populated
+// return Collection of Nodes by default relations are not populated
 const users = await User.findAll()
 
 const data = users.toJSON()
 
-//or feel free to iterable
-users.forEach(user => {
-    console.log(user)
+// or feel free to iterable
+await users.asyncForEach(async user => {
+  // calling a relationship attribute will trigger an async function
+  // that populate the key
+  await user.role
 })
 ```
 
 #### findAll with relations
 ```
-//return Collection of Nodes with your relations already filled
+// return Collection of Nodes with your relations already filled
 const users = await User.findAll({
  with_related: ['role__name', 'friends']  
 })
 
 const data = users.toJSON()
 
-//or feel free to iterable
+// or feel free to iterable not syncronno
 users.forEach(user => {
+    console.log(user.friends)
+    console.log(user.role.name.value)
+})
+
+// awaiting for results
+await users.asyncForEach(async user => {
     console.log(user.friends)
     console.log(user.role.name.value)
 })
@@ -129,12 +137,6 @@ const users = User.findBy([
   { key: 'role.key', value: 'admin'}
 ], {
   with: ['role__name']
-})
-
-//or feel free to get the info
-const users = User.findAll() //return Collection of Node
-users.forEach(user => {
-    const friends = await user.friends
 })
 ```
 

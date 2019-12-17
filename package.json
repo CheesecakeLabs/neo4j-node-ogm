@@ -1,13 +1,13 @@
 {
   "name": "neo4j-node-ogm",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Neo4j Object Graph Mapping (OGM) for NodeJS",
   "repository": "https://github.com/CheesecakeLabs/neo4j-node-ogm",
   "main": "build/index.js",
   "scripts": {
     "build": "./node_modules/.bin/babel src -d build",
     "test": "./node_modules/.bin/mocha -r @babel/core -r @babel/register ./tests{/,/**/}*.spec.js",
-    "dev": "./node_modules/.bin/nodemon --inspect=0.0.0.0:56745 --exec babel-node src/index.js"
+    "dev": "./node_modules/.bin/nodemon --inspect=0.0.0.0:56746 --exec babel-node test.js"
   },
   "author": "Natam Oliveira - Cheesecake Labs <natamvo@gmail.com>",
   "keywords": [

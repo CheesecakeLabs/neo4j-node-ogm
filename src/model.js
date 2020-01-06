@@ -1,7 +1,7 @@
 import { getConnection } from './driver'
 import { Cypher } from './cypher'
 import { Collection } from './collection'
-import { createOnlyGetter, createGetterAndSetter } from './utils'
+import { createOnlyGetter, createGetterAndSetter, convertID } from './utils'
 
 class Model {
   /**
@@ -12,16 +12,6 @@ class Model {
   constructor (values = {}) {
     this._with = []
     this._values = values
-  }
-
-  convertID ({ low, high }) {
-    let res = high
-
-    for (let i = 0; i < 32; i++) {
-      res *= 2
-    }
-
-    return low + res
   }
 
   toJSON () {
@@ -113,61 +103,70 @@ class Model {
     return true
   }
 
-  hydrate (model, dataJSON, isArray = false, level = 0) {
+  /**
+   * Hydrate the model with the values of database
+   *
+   * @param {Model} model
+   * @param {JSON} dataJSON
+   * @param {Boolean} isArray
+   * @param {Integer} level
+   * @param {Boolean} onlyRelation
+   */
+  hydrate (model, dataJSON, level = 0, onlyRelation = false) {
     if (dataJSON) {
+      if (!onlyRelation) {
+        // create only getter for id
+        model._values.id = dataJSON.id
+        createOnlyGetter(model, 'id', convertID)
+      }
+      // hydrate others fields
       Object.entries(model._attributes).forEach(([key, attr]) => {
         // if is model should hydrate with the right class
-        if (attr.isModel) {
+        if (attr.isModel && this.checkWith(level, key)) {
           // with_related is ok, so there is information to hydrate
-          if (this.checkWith(level, key)) {
-            if (Array.isArray(dataJSON[key])) {
+          if (Array.isArray(dataJSON[key])) {
+            // create getter and setter for that attribute inside _values
+            createGetterAndSetter(model, key, attr.set, attr.get)
+            // if is array should create the key as array and push for each record
+            model[key] = []
+            dataJSON[key].forEach(data => {
+              this.hydrate(model, data)
+            })
+          } else {
+            // hydrate the model
+            const targetModel = new attr.target()
+            const hydrated = this.hydrate(targetModel, dataJSON[key], level + 1)
+            if (attr.isArray) {
+              // array should be pushed
+              model._values[key].push(hydrated)
+            } else {
               // create getter and setter for that attribute inside _values
               createGetterAndSetter(model, key, attr.set, attr.get)
-              // if is array should create the key as array and push for each record
-              model[key] = []
-              dataJSON[key].forEach(data => {
-                this.hydrate(model, data, true)
-              })
-            } else {
-              // hydrate the model
-              const targetModel = new attr.target()
-              const hydrated = this.hydrate(targetModel, dataJSON[key], false, level + 1)
-              if (attr.isArray) {
-                // array should be pushed
-                model._values[key].push(hydrated)
-              } else {
-                // create getter and setter for that attribute inside _values
-                createGetterAndSetter(model, key, attr.set, attr.get)
-                // if not array should be linked at _values directed
-                model._values[key] = hydrated
-              }
+              // if not array should be linked at _values directed
+              model._values[key] = hydrated
             }
-          } else {
-            // is not related, so we should hydrate with target model
-            // that way the attribute is executed a match when accessed
-            const functionToFind = (value) => {
-              // hidrate _values?
-              const data = attr.target.findAll()
-              data.then(values => {
-                model._values[key] = values
-              })
-              return data
-            }
-            createGetterAndSetter(model, key, (value) => value, functionToFind)
           }
-        } else {
+        } else if (!onlyRelation) {
           // create getter and setter for that attribute inside _values
           createGetterAndSetter(model, key, attr.set, attr.get)
           // just a value of the model
           model._values[key] = dataJSON[key]
         }
       })
-      // create only getter for id
-      model._values.id = dataJSON.id
-      createOnlyGetter(model, 'id', () => model.convertID(dataJSON.id))
     }
 
     return model
+  }
+
+  async fetch (with_related = []) {
+    return this.constructor.findAll({
+      filterAttributes: [
+        { key: `id(${this.getAliasName()})`, value: this.id }
+      ],
+      with_related,
+      parent: this,
+      onlyRelation: true
+    })
   }
 
   async delete () {
@@ -209,21 +208,20 @@ class Model {
         }
       })
       const data = await this.cypher.create(this.getCypherName())
-      this.id = this.convertID(data)
+      this._values.id = data
     }
   }
 
-  static async findByID (id, config = {}) {
+  static async findByID (id) {
     const self = new this()
 
-    config = Object.assign({
+    const config = {
       with_related: [],
       filterAttributes: [{
         key: `id(${self.getAliasName()})`,
         value: id
       }]
-    },
-    config)
+    }
 
     const data = await this.findAll(config)
 
@@ -236,14 +234,21 @@ class Model {
   }
 
   static async findAll (config = {}) {
-    const self = new this()
+    let self
+    if (!config.parent) {
+      self = new this()
+    } else {
+      self = config.parent
+      self.parent = true
+    }
 
     Object.keys(config).forEach(key => {
       config[key] === undefined && delete config[key]
     })
     config = Object.assign({
       with_related: [],
-      filterAttributes: []
+      filterAttributes: [],
+      onlyRelation: false
     },
     config)
 
@@ -264,9 +269,14 @@ class Model {
 
     const result = new Collection()
     data.forEach(record => {
-      const model = new this()
+      let model
+      if (!config.parent) {
+        model = new this()
+      } else {
+        model = config.parent
+      }
       const fields = record._fields[0] // JSON from database
-      const hydrated = self.hydrate(model, fields)
+      const hydrated = self.hydrate(model, fields, 0, config.onlyRelation)
 
       result.push(hydrated)
     })

@@ -1,10 +1,9 @@
 import { assert, expect } from 'chai'
 // INSTANCES
-import { Collection } from '../src/collection'
+import { Collection } from '../build/collection'
 
 
 describe('Collection', () => {
-
   const values = [1, 2, 3, 4]
   const collection = new Collection()
 

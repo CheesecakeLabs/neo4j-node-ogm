@@ -39,6 +39,7 @@ class Cypher {
       if (targetModel.filter_relationship) {
         filterRelationship = '{' + Object.entries(targetModel.filter_relationship).map(([key, value]) => `${key}:'${value}'`).join(', ') + '}'
       }
+
       this.matchs.push(`OPTIONAL MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(previousAlias)})`)
       this.nodes.push(previousAlias)
     } else {
@@ -72,11 +73,12 @@ class Cypher {
     }
   }
 
-  modelReturn (alias, model, attributeID, level = 0, isModel = false, isArray = true, wasCollected = false) {
+  modelReturn (alias, model, attributeID, level = 0, wasCollected = false) {
     this.returnString += `${alias} {`
 
     const attrs = []
     let willCollect = false
+
     attrs.push(`id:id(${attributeID})`)
 
     for (const [attr, field] of Object.entries(model._attributes)) {
@@ -85,17 +87,19 @@ class Cypher {
           if (field.isModel && level < 1) {
             willCollect = true
           }
-          this.modelReturn(`${attr}:${willCollect ? 'collect(' + attr : attr}`, new field.target(), attr, level + 1, field.isModel, field.isArray, willCollect)
+          this.modelReturn(`${attr}:${willCollect ? 'collect(' + attr : attr}`, new field.target(), attr, level + 1, willCollect)
         }
       } else {
-        attrs.push(`.${attr}`)
+        if (!model.parent) {
+          attrs.push(`.${attr}`)
+        }
       }
     }
 
     this.returnString += `${attrs.join(', ')} }`
 
     if (wasCollected) {
-      if (isArray) {
+      if (model.isArray) {
         this.returnString += ') '
       } else {
         this.returnString += ')[0] '

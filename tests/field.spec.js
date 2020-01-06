@@ -1,6 +1,6 @@
 import { assert, expect } from 'chai'
 // INSTANCES
-import { Field } from '../src'
+import { Field } from '../build'
 
 
 describe('Field', () => {

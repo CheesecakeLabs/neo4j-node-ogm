@@ -80,14 +80,16 @@ class User extends Model {
     role: Field.Relationship({
       labels: ['HAS_ROLE'],
       target: Role,
-    }), // role : { label: 'HAS_ROLE': children: Node }
+    }), // role : Role
+    // user_role : { label: ['HAS_ROLE'], role: Role }
     friends: Field.Relationships({
       labels: ['FRIENDSHIP'],
-      target: new this(),
+      target: this,
       attributes: {
         intimacy: Field.String()
       }
-    }) // friends : { label: 'FRIENDSHIP': children: [Node, ...] }
+    }) // friends : [User]
+    // user_friends : { label: ['FRIENDSHIP'], ...attributes, friends: [User] }
   }
 }
 ```
@@ -103,7 +105,7 @@ const data = users.toJSON()
 await users.asyncForEach(async user => {
   // calling a relationship attribute will trigger an async function
   // that populate the key
-  await user.role
+  await user.fetch(['role__name'])
 })
 ```
 
@@ -116,13 +118,13 @@ const users = await User.findAll({
 
 const data = users.toJSON()
 
-// or feel free to iterable not syncronno
+// or feel free to iterable not synchronous
 users.forEach(user => {
     console.log(user.friends)
     console.log(user.role.name.value)
 })
 
-// awaiting for results
+// awaiting for results synchronous
 await users.asyncForEach(async user => {
     console.log(user.friends)
     console.log(user.role.name.value)
@@ -174,14 +176,17 @@ await users.deleteAll()
 
 ## API
 
-Model async functions:
+Model static async functions:
 * findAll({ with_related, filterAttributes, skip, limit }) - return a Node's Collection
 * findBy(filterAttributes, { with_related, skip, limit }) - return a Node's Collection
 * findByID(Integer id) - return a Node
+
+Model async functions:
 * save() - return Integer ID/false
 * merge(Array fields) - return true/false
 * delete(Bool detach) - return true/false
 * relate(Node from, Node to, Array labels, Object properties)
+* fetch(Array attributes)
 
 Fields type:
 * **.String(Object args)**
@@ -245,5 +250,5 @@ Fields type:
 | max_length | Integer | Define the max length of caracteres of the field | `max_length: 255` |
 | required | Boolean | Validation to force a attribute to be required ( != undefined/null/'' ) | `required: true` |
 | set | Function | A function to override the set attribute of the Model | `set: (value) => { return value.toUpperCase() }` |
-| target | Class | A instance Model to relate Models, `this` is accepted to refer to self Class | `target: new Text()` |
+| target | Class | A reference of Model to relate Models, `this` is accepted to refer to self Class | `target: Text` |
 | valid | Array | A strict whitelist of valid options.  All others will be rejected. | `valid: ['A', 'B', 'C']` |

@@ -1,6 +1,6 @@
 {
   "name": "neo4j-node-ogm",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Neo4j Object Graph Mapping (OGM) for NodeJS",
   "repository": "https://github.com/CheesecakeLabs/neo4j-node-ogm",
   "main": "build/index.js",

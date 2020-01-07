@@ -24,6 +24,7 @@ coverage
 
 # Compiled binary
 build/
+infra/data/*
 
 # Dependency directories
 node_modules/

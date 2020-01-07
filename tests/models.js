@@ -41,15 +41,15 @@ class User extends Model {
     }),
     password: Field.Hash(),
     created_at: Field.DateTime({
-      default: 'NOW',
+      default: 'NOW'
     }),
     role: Field.Relationship({
       labels: ['HAS_ROLE'],
-      target: Role,
+      target: Role
     }), // role : { label: 'HAS_ROLE': children: Node }
     friends: Field.Relationships({
       labels: ['FRIENDSHIP'],
-      target: this,
+      target: User,
       attributes: {
         intimacy: Field.String()
       }

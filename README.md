@@ -81,7 +81,6 @@ class User extends Model {
       labels: ['HAS_ROLE'],
       target: Role,
     }), // role : Role
-    // user_role : { label: ['HAS_ROLE'], role: Role }
     friends: Field.Relationships({
       labels: ['FRIENDSHIP'],
       target: this,
@@ -89,7 +88,6 @@ class User extends Model {
         intimacy: Field.String()
       }
     }) // friends : [User]
-    // user_friends : { label: ['FRIENDSHIP'], ...attributes, friends: [User] }
   }
 }
 ```

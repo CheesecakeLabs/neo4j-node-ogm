@@ -21,6 +21,7 @@ class Field {
       default: undefined,
       min_length: false,
       max_length: false,
+      attributes: false,
       labels: [],
       set: (value) => value,
       get: (value) => value
@@ -189,7 +190,8 @@ class Field {
       target: obj.target,
       labels: obj.labels,
       filter_relationship: obj.filter_relationship,
-      filter_node: obj.filter_node
+      filter_node: obj.filter_node,
+      attributes: obj.attributes
     })
     return field
   }
@@ -209,7 +211,8 @@ class Field {
       target: obj.target,
       labels: obj.labels,
       filter_relationship: obj.filter_relationship,
-      filter_node: obj.filter_node
+      filter_node: obj.filter_node,
+      attributes: obj.attributes
     })
     return field
   }

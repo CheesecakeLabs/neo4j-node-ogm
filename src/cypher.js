@@ -73,7 +73,7 @@ class Cypher {
     }
   }
 
-  modelReturn (alias, model, attributeID, level = 0, wasCollected = false) {
+  modelReturn (alias, model, attributeID, level = 0, wasCollected = false, previous = false) {
     this.returnString += `${alias} {`
 
     const attrs = []
@@ -81,13 +81,14 @@ class Cypher {
 
     attrs.push(`id:id(${attributeID})`)
 
+    // LOOP ON MODEL ATTRIBUTES
     for (const [attr, field] of Object.entries(model._attributes)) {
       if (field.isModel) {
         if (model.checkWith(level, attr, this.actualModel._with) && this.isFind) {
           if (field.isModel && level < 1) {
             willCollect = true
           }
-          this.modelReturn(`${attr}:${willCollect ? 'collect(' + attr : attr}`, new field.target(), attr, level + 1, willCollect)
+          this.modelReturn(`${attr}:${willCollect ? 'collect(' + attr : attr}`, new field.target(), attr, level + 1, willCollect, { field, model })
         }
       } else {
         if (!model.parent) {
@@ -96,10 +97,17 @@ class Cypher {
       }
     }
 
+    if (previous) {
+      // THE RELATION HAS ATTRIBUTES
+      for (const [relAttr] of Object.entries(previous.field.attributes)) {
+        attrs.push(`${relAttr}:${previous.model.getAliasName()}_${attributeID}.${relAttr}`)
+      }
+    }
+
     this.returnString += `${attrs.join(', ')} }`
 
-    if (wasCollected) {
-      if (model.isArray) {
+    if (wasCollected && previous) {
+      if (previous.field.isArray) {
         this.returnString += ') '
       } else {
         this.returnString += ')[0] '
@@ -156,7 +164,7 @@ class Cypher {
     this.writeWhere()
 
     const stmt = `${this.matchs.join(' ')} ${this.whereString} DELETE ${alias}`
-    console.log(stmt)
+    // console.log(stmt)
     const session = await database.session()
 
     let result
@@ -177,7 +185,7 @@ class Cypher {
     this.writeReturn(this.return)
     const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.distinct} ${this.returnString}`
     const session = database.session()
-    console.log(stmt)
+    // console.log(stmt)
     const result = await session.run(stmt)
     session.close()
     this.clean()

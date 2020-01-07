@@ -114,7 +114,7 @@ class Model {
    */
   hydrate (model, dataJSON, level = 0, onlyRelation = false) {
     if (dataJSON) {
-      if (!onlyRelation) {
+      if (!onlyRelation && model.id !== undefined) {
         // create only getter for id
         model._values.id = dataJSON.id
         createOnlyGetter(model, 'id', convertID)
@@ -130,21 +130,19 @@ class Model {
             // if is array should create the key as array and push for each record
             model[key] = []
             dataJSON[key].forEach(data => {
-              this.hydrate(model, data)
+              const targetModel = new attr.target()
+              const hydrated = this.hydrate(targetModel, data, level + 1)
+              // array should be pushed
+              model._values[key].push(hydrated)
             })
           } else {
             // hydrate the model
             const targetModel = new attr.target()
             const hydrated = this.hydrate(targetModel, dataJSON[key], level + 1)
-            if (attr.isArray) {
-              // array should be pushed
-              model._values[key].push(hydrated)
-            } else {
-              // create getter and setter for that attribute inside _values
-              createGetterAndSetter(model, key, attr.set, attr.get)
-              // if not array should be linked at _values directed
-              model._values[key] = hydrated
-            }
+            // create getter and setter for that attribute inside _values
+            createGetterAndSetter(model, key, attr.set, attr.get)
+            // if not array should be linked at _values directed
+            model._values[key] = hydrated
           }
         } else if (!onlyRelation) {
           // create getter and setter for that attribute inside _values
@@ -269,10 +267,8 @@ class Model {
 
     const result = new Collection()
     data.forEach(record => {
-      let model
-      if (!config.parent) {
-        model = new this()
-      } else {
+      let model = new this()
+      if (config.parent) {
         model = config.parent
       }
       const fields = record._fields[0] // JSON from database

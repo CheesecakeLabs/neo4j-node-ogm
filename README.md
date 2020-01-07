@@ -83,7 +83,7 @@ class User extends Model {
     }), // role : Role
     friends: Field.Relationships({
       labels: ['FRIENDSHIP'],
-      target: this,
+      target: User,
       attributes: {
         intimacy: Field.String()
       }
@@ -248,5 +248,5 @@ Fields type:
 | max_length | Integer | Define the max length of caracteres of the field | `max_length: 255` |
 | required | Boolean | Validation to force a attribute to be required ( != undefined/null/'' ) | `required: true` |
 | set | Function | A function to override the set attribute of the Model | `set: (value) => { return value.toUpperCase() }` |
-| target | Class | A reference of Model to relate Models, `this` is accepted to refer to self Class | `target: Text` |
+| target | Class | A reference of Model to relate Models, `this` is not accepted to refer to self Class | `target: Text` |
 | valid | Array | A strict whitelist of valid options.  All others will be rejected. | `valid: ['A', 'B', 'C']` |

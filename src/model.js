@@ -112,14 +112,24 @@ class Model {
    * @param {Integer} level
    * @param {Boolean} onlyRelation
    */
-  hydrate (model, dataJSON, level = 0, onlyRelation = false) {
+  hydrate (model, dataJSON, level = 0, onlyRelation = false, previous) {
     if (dataJSON) {
-      if (!onlyRelation && model.id !== undefined) {
+      if (!onlyRelation) {
         // create only getter for id
         model._values.id = dataJSON.id
         createOnlyGetter(model, 'id', convertID)
       }
-      // hydrate others fields
+      // hydrate relationship Fields
+      if (previous) {
+        // THE RELATION HAS ATTRIBUTES
+        for (const [relKey, relAttr] of Object.entries(previous.attributes)) {
+          // create getter and setter for that attribute inside _values
+          createGetterAndSetter(model, relKey, relAttr.set, relAttr.get)
+          // if not array should be linked at _values directed
+          model._values[relKey] = dataJSON[relKey]
+        }
+      }
+      // hydrate node fields
       Object.entries(model._attributes).forEach(([key, attr]) => {
         // if is model should hydrate with the right class
         if (attr.isModel && this.checkWith(level, key)) {
@@ -131,14 +141,14 @@ class Model {
             model[key] = []
             dataJSON[key].forEach(data => {
               const targetModel = new attr.target()
-              const hydrated = this.hydrate(targetModel, data, level + 1)
+              const hydrated = this.hydrate(targetModel, data, level + 1, false, attr)
               // array should be pushed
               model._values[key].push(hydrated)
             })
           } else {
             // hydrate the model
             const targetModel = new attr.target()
-            const hydrated = this.hydrate(targetModel, dataJSON[key], level + 1)
+            const hydrated = this.hydrate(targetModel, dataJSON[key], level + 1, false, attr)
             // create getter and setter for that attribute inside _values
             createGetterAndSetter(model, key, attr.set, attr.get)
             // if not array should be linked at _values directed

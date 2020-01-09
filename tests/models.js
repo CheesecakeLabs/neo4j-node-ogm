@@ -1,11 +1,9 @@
-import { Model, Field } from '../build'
+import { Model, Field } from '../src'
 
 class Text extends Model {
   _labels = ['Text']
   _attributes = {
-    value: {
-      type: Field.String()
-    }
+    value: Field.String()
   }
 }
 

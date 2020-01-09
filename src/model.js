@@ -11,7 +11,10 @@ class Model {
   */
   constructor (values = {}) {
     this._with = []
-    this._values = values
+    this._values = {}
+    Object.entries(values).forEach(([key, value]) => {
+      this[key] = value
+    })
   }
 
   toJSON () {
@@ -198,8 +201,7 @@ class Model {
       })
       this.cypher.isDistinct()
       this.doMatchs(this, false)
-      Object.keys(this._attributes).forEach(key => {
-        const field = this._attributes[key]
+      Object.entries(this._attributes).forEach(([key, field]) => {
         if (field.isModel === false) {
           this.cypher.addSet(this.getAliasName() + '.' + key, this[key])
         }
@@ -209,14 +211,15 @@ class Model {
     } else {
       // create
       this.doMatchs(this, false)
-      Object.keys(this._attributes).forEach(key => {
-        const field = this._attributes[key]
+      Object.entries(this._attributes).forEach(([key, field]) => {
         if (field.isModel === false) {
           this.cypher.addSet(this.getAliasName() + '.' + key, this[key])
         }
       })
       const data = await this.cypher.create(this.getCypherName())
-      this._values.id = data
+
+      const fields = data._fields[0] // JSON from database
+      this.hydrate(this, fields)
     }
   }
 

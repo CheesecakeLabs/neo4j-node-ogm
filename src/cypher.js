@@ -55,9 +55,9 @@ class Cypher {
     }
   }
 
-  writeSets () {
+  writeSets (CONCAT = ' AND ') {
     if (this.sets.length > 0) {
-      this.setString = `SET ${this.sets.join(' AND ')}`
+      this.setString = `SET ${this.sets.join(CONCAT)}`
     }
   }
 
@@ -120,16 +120,16 @@ class Cypher {
   }
 
   async create (nodeAlias) {
-    this.writeSets()
-    this.writeReturn(this.return, false)
+    this.writeSets(' , ')
+    this.writeReturn(this.return)
     const stmt = `CREATE (${nodeAlias}) ${this.whereString} ${this.setString} RETURN ${this.returnString}`
-
+    // console.log(stmt)
     const session = await database.session()
 
     let result
     try {
       result = await session.run(stmt)
-      result = result.records[0]._fields[0].id
+      result = result.records[0]
     } catch (e) {
       result = false
     }

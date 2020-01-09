@@ -37,9 +37,7 @@ import { Model, Field } from 'neo4j-node-ogm'
 class Text extends Model {
   _labels = ['Text']
   _attributes = {
-    value: {
-      type: Field.String()
-    }
+    value: Field.String()
   }
 }
 

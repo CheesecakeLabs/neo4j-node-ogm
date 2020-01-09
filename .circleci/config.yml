@@ -7,7 +7,12 @@ defaults: &defaults
 
 jobs:
   test:
-    <<: *defaults
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:12.8.0
+      - image: neo4j:3.5.6
+        environment:
+          NEO4J_AUTH: neo4j/letmein
     steps:
       - checkout
 

@@ -33,6 +33,15 @@ class Field {
   }
 
   /**
+   * Return the String for Label to use on Cypher
+   *
+   * @return {String}
+   */
+  getLabelName () {
+    return this.labels.join(':').toUpperCase()
+  }
+
+  /**
    * @static
    * Generate Field instance
    * for string attributes

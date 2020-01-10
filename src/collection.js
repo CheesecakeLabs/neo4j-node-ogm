@@ -1,20 +1,22 @@
 class Collection extends Array {
   toJSON () {
-    const data = []
-    this.forEach(item => {
-      data.push(item.toJSON())
-    })
-    return data
+    return this.map(item => item.toJSON)
   }
 
-  async deleteAll () {
-    return Promise.all(this.map(item => item.delete()))
+  async deleteAll (detach = false) {
+    return Promise.all(this.map(item => item.delete(detach)))
   }
 
   async asyncForEach (callback) {
     for (let index = 0; index < this.length; index++) {
       await callback(this[index], index)
     }
+  }
+
+  async relate (attr, node, attributes) {
+    this.forEach(item => {
+      item.relate(attr, node, attributes)
+    })
   }
 
   pushAll (values) {

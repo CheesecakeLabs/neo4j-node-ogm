@@ -66,6 +66,7 @@ class Model {
     if (!overwriteWith) overwriteWith = this._with
     overwriteWith.forEach(item => {
       // found the attr named as model attribute
+      // console.log('checking', item[level], nodeName)
       if (item[level] === nodeName) {
         ret = true
       }
@@ -106,6 +107,10 @@ class Model {
     return true
   }
 
+  addMatchs (node) {
+    this.cypher.match(node, false, false, false, false)
+  }
+
   /**
    * Hydrate the model with the values of database
    *
@@ -117,7 +122,7 @@ class Model {
    */
   hydrate (model, dataJSON, level = 0, onlyRelation = false, previous) {
     if (dataJSON) {
-      if (!onlyRelation) {
+      if (!onlyRelation && !model.id) {
         // create only getter for id
         model._values.id = dataJSON.id
         createOnlyGetter(model, 'id', convertID)
@@ -180,14 +185,14 @@ class Model {
     })
   }
 
-  async delete () {
+  async delete (detach = false) {
     this.cypher = new Cypher()
     this.doMatchs(this, false)
     this.cypher.addWhere({
       attr: `id(${this.getAliasName()})`,
       value: this.id
     })
-    const data = await this.cypher.delete(this.getAliasName())
+    const data = await this.cypher.delete(this.getAliasName(), detach)
     return data
   }
 
@@ -221,6 +226,38 @@ class Model {
       const fields = data._fields[0] // JSON from database
       this.hydrate(this, fields)
     }
+  }
+
+  /**
+  * Create a relation between the nodes
+  *
+  * @param {String} attr
+  * @param {Model} node
+  * @param {JSON} attributes
+  */
+  async relate (attr, node, attributes = {}) {
+    this.cypher = new Cypher()
+    this.doMatchs(this)
+    this.addMatchs(node)
+    // ADD TO _WITH TO RETURN THE RELATION
+    this._with = [[attr]]
+    this.cypher.addWhere({
+      attr: `id(${this.getAliasName()})`,
+      value: this.id
+    })
+    this.cypher.addWhere({
+      attr: `id(${node.getAliasName()})`,
+      value: node.id
+    })
+    // ADD THE ATTRIBUTES ON RELATION
+    Object.entries(attributes).forEach(([key, value]) => {
+      this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + key, value)
+    })
+    // CREATE THE RELATION
+    const field = this._attributes[attr]
+    const data = await this.cypher.relate(this, field, node)
+    const fields = data._fields[0] // JSON from database
+    this.hydrate(this, fields)
   }
 
   static async findByID (id) {

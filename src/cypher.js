@@ -31,7 +31,7 @@ class Cypher {
     }
   }
 
-  match (node, previousAlias = false, relationship = false, targetModel = false) {
+  match (node, previousAlias = false, relationship = false, targetModel = false, putOnReturn = true) {
     if (targetModel) {
       const relationName = `${node.getAliasName()}_${previousAlias}${relationship}`
 
@@ -43,9 +43,13 @@ class Cypher {
       this.matchs.push(`OPTIONAL MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(previousAlias)})`)
       this.nodes.push(previousAlias)
     } else {
-      this.matchs.push(`MATCH (${node.getCypherName()})`)
-      this.nodes.push(node.getAliasName())
-      this.return[node.getAliasName()] = node
+      if (putOnReturn) {
+        this.matchs.push(`MATCH (${node.getCypherName()})`)
+        this.nodes.push(node.getAliasName())
+        this.return[node.getAliasName()] = node
+      } else {
+        this.matchs.push(`, (${node.getCypherName()})`)
+      }
     }
   }
 
@@ -141,10 +145,10 @@ class Cypher {
 
   async update () {
     this.writeWhere()
-    this.writeSets()
+    this.writeSets(' , ')
     this.writeReturn(this.return, false)
     const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.returnString}`
-
+    // console.log(stmt)
     const session = await database.session()
 
     let result
@@ -160,10 +164,10 @@ class Cypher {
     return result
   }
 
-  async delete (alias) {
+  async delete (alias, detach = false) {
     this.writeWhere()
 
-    const stmt = `${this.matchs.join(' ')} ${this.whereString} DELETE ${alias}`
+    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${detach ? 'DETACH' : ''} DELETE ${alias}`
     // console.log(stmt)
     const session = await database.session()
 
@@ -180,10 +184,27 @@ class Cypher {
     return result
   }
 
+  async relate (node1, relation, node2) {
+    this.writeWhere()
+    this.writeReturn(this.return)
+    this.writeSets(' , ')
+    const stmt = `${this.matchs.join(' ')} ${this.whereString}
+                  CREATE (${node1.getAliasName()})-[${node1.getAliasName()}_${node2.getAliasName()}:${relation.getLabelName()}]->(${node2.getAliasName()})
+                  ${this.setString} RETURN ${this.returnString}`
+
+    const session = database.session()
+    // console.log(stmt)
+    const result = await session.run(stmt)
+    session.close()
+    this.clean()
+    return result.records[0]
+  }
+
   async find () {
     this.writeWhere()
     this.writeReturn(this.return)
     const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.distinct} ${this.returnString}`
+
     const session = database.session()
     // console.log(stmt)
     const result = await session.run(stmt)

@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import md5 from 'crypto-js/md5'
 import { User, Role, Text } from './models'
 
 describe('Use Cases - 01', () => {
@@ -22,13 +23,15 @@ describe('Use Cases - 01', () => {
   describe('::create', () => {
     it('create a simple user', done => {
       const user = new User({
-        name: 'User UseCase Test'
+        name: 'User UseCase Test',
+        password: 12345
       })
       user.email = 'email@domain.com'
 
       const user2 = new User({
         name: 'User UseCase Test',
-        email: 'email2@domain.com'
+        email: 'email2@domain.com',
+        password: 12345
       })
       const p1 = user.save()
       const p2 = user2.save()
@@ -37,6 +40,7 @@ describe('Use Cases - 01', () => {
         expect(user.id).to.be.a('number')
         expect(user.name).to.be.equal('User UseCase Test')
         expect(user.email).to.be.equal('email@domain.com')
+        expect(user.password).to.be.equal(md5('12345').toString())
       }).then(() => done(), done)
     })
 
@@ -46,7 +50,7 @@ describe('Use Cases - 01', () => {
       })
 
       role.save().then(() => {
-        expect(role.key).to.be.equal('key-admin')
+        expect(role.key).to.be.equal('key-ADMIN')
       }).then(() => done(), done)
     })
 

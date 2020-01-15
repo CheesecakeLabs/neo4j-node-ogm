@@ -1,13 +1,13 @@
 import { expect } from 'chai'
 import { User, Role, Text } from './models'
 
-describe('Use Cases - 04', () => {
+describe('Use Cases - 03', () => {
   describe('::relationship', () => {
     let role
     let user
     it('selecting role and user', done => {
       Role.findBy([
-        { key: 'key', value: 'admin' }
+        { key: 'key', value: 'ADMIN' }
       ]).then(roles => {
         role = roles[0]
         User.findBy([
@@ -19,8 +19,8 @@ describe('Use Cases - 04', () => {
     })
 
     it('relating', done => {
-      user.relate('role', role).then(() => {
-        expect(user.role.key).to.be.equal('key-admin')
+      user.createRelationship('role', role).then(() => {
+        expect(user.role.key).to.be.equal('key-ADMIN')
       }).then(() => done(), done)
     })
   })

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { Text } from './models'
 
-describe('Use Cases - 03', () => {
+describe('Use Cases - 04', () => {
   describe('::deleting collection', () => {
     it('deleting', done => {
       Text.findAll().then(texts => {

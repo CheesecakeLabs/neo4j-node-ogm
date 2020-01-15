@@ -105,7 +105,7 @@ class Field {
   static Hash (obj = {}) {
     const field = new this({
       required: obj.required,
-      set: (value) => md5(value)
+      set: (value) => md5(`${value}`)
     })
     return field
   }

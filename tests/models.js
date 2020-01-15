@@ -1,57 +1,66 @@
 import { Model, Field } from '../src'
 
 class Text extends Model {
-  _labels = ['Text']
-  _attributes = {
-    value: Field.String()
+  constructor (values) {
+    const labels = ['Text']
+    const attributes = {
+      value: Field.String()
+    }
+    super(values, labels, attributes)
   }
 }
 
 class Role extends Model {
-  _labels = ['Role']
-  _attributes = {
-    key: Field.String({
-      required: true,
-      set: (value) => {
-        return value.toUpperCase()
-      },
-      get: (value) => {
-        return `key-${value}`
-      }
-    }),
-    name: Field.Relationship({
-      with: true,
-      labels: ['TRANSLATE'],
-      target: Text,
-      filter_relationship: {
-        language: 'en_US'
-      }
-    })
+  constructor (values) {
+    const labels = ['Role']
+    const attributes = {
+      key: Field.String({
+        required: true,
+        set: (value) => {
+          return value.toUpperCase()
+        },
+        get: (value) => {
+          return `key-${value}`
+        }
+      }),
+      name: Field.Relationship({
+        with: true,
+        labels: ['TRANSLATE'],
+        target: Text,
+        filter_relationship: {
+          language: 'en_US'
+        }
+      })
+    }
+    super(values, labels, attributes)
   }
 }
 
 class User extends Model {
-  _labels = ['User']
-  _attributes = {
-    name: Field.String(),
-    email: Field.String({
-      max_length: 255
-    }),
-    password: Field.Hash(),
-    created_at: Field.DateTime({
-      default: 'NOW'
-    }),
-    role: Field.Relationship({
-      labels: ['HAS_ROLE'],
-      target: Role
-    }), // role : { label: 'HAS_ROLE': children: Node }
-    friends: Field.Relationships({
-      labels: ['FRIENDSHIP'],
-      target: User,
-      attributes: {
-        intimacy: Field.String()
-      }
-    }) // friends : { label: 'FRIENDSHIP': children: [Node, ...] }
+  constructor (values) {
+    const labels = ['User']
+    const attributes = {
+      name: Field.String(),
+      email: Field.String({
+        max_length: 255
+      }),
+      password: Field.Hash(),
+      created_at: Field.DateTime({
+        default: 'NOW'
+      }),
+      role: Field.Relationship({
+        labels: ['HAS_ROLE'],
+        target: Role
+      }), // role : { label: 'HAS_ROLE': children: Node }
+      friends: Field.Relationships({
+        labels: ['FRIENDSHIP'],
+        target: User,
+        attributes: {
+          intimacy: Field.String()
+        }
+      }) // friends : { label: 'FRIENDSHIP': children: [Node, ...] }
+    }
+    super(values, labels, attributes)
   }
 }
 

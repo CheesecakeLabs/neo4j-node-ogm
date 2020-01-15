@@ -1,4 +1,3 @@
-import { getConnection } from './driver'
 import { Cypher } from './cypher'
 import { Collection } from './collection'
 import { createOnlyGetter, createGetterAndSetter, convertID } from './utils'
@@ -9,9 +8,14 @@ class Model {
    *
    * @param {Object} values
   */
-  constructor (values = {}) {
+  constructor (values = {}, labels = [], attributes = {}) {
     this._with = []
-    this._values = {}
+    this._values = values
+    this._labels = labels
+    this._attributes = attributes
+    Object.entries(attributes).forEach(([key, field]) => {
+      createGetterAndSetter(this, key, field.set, field.get)
+    })
     Object.entries(values).forEach(([key, value]) => {
       this[key] = value
     })
@@ -208,7 +212,9 @@ class Model {
       this.doMatchs(this, false)
       Object.entries(this._attributes).forEach(([key, field]) => {
         if (field.isModel === false) {
-          this.cypher.addSet(this.getAliasName() + '.' + key, this[key])
+          this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
+        } else {
+          // TODO: add the relation
         }
       })
       const data = await this.cypher.update()
@@ -218,7 +224,7 @@ class Model {
       this.doMatchs(this, false)
       Object.entries(this._attributes).forEach(([key, field]) => {
         if (field.isModel === false) {
-          this.cypher.addSet(this.getAliasName() + '.' + key, this[key])
+          this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
         }
       })
       const data = await this.cypher.create(this.getCypherName())
@@ -235,7 +241,7 @@ class Model {
   * @param {Model} node
   * @param {JSON} attributes
   */
-  async relate (attr, node, attributes = {}) {
+  async createRelationship (attr, node, attributes = {}) {
     this.cypher = new Cypher()
     this.doMatchs(this)
     this.addMatchs(node)

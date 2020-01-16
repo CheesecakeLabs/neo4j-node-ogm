@@ -25,16 +25,6 @@ describe('Use Cases - 02', () => {
         expect(updatedUser.email).to.be.equal('emailupdated@domain.com')
       }).then(() => done(), done)
     })
-
-    it('delete user', done => {
-      user.delete().then(() => done(), done)
-    })
-
-    it('findByID to not return deleted user', done => {
-      User.findByID(user_id).then(deletedUser => {
-        expect(deletedUser).to.be.equal(undefined)
-      }).then(() => done(), done)
-    })
   })
 
   describe('::findAll', () => {

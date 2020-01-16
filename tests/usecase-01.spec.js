@@ -1,22 +1,17 @@
 import { expect } from 'chai'
 import md5 from 'crypto-js/md5'
 import { User, Role, Text } from './models'
+import { getConnection } from '../src'
 
 describe('Use Cases - 01', () => {
-  describe('::deleting', () => {
+  describe('::clean database', () => {
     it('users', done => {
-      User.findAll().then(users => {
-        users.deleteAll(true).then(() => done(), done)
-      })
-    })
-    it('roles', done => {
-      Role.findAll().then(roles => {
-        roles.deleteAll(true).then(() => done(), done)
-      })
-    })
-    it('texts', done => {
-      Text.findAll().then(texts => {
-        texts.deleteAll(true).then(() => done(), done)
+      // CLEAN DATABASE
+      const database = getConnection()
+      const session = database.session()
+      session.run('MATCH (all) DETACH DELETE all').then(() => {
+        session.close()
+        done()
       })
     })
   })

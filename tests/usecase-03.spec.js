@@ -29,5 +29,11 @@ describe('Use Cases - 03', () => {
         expect(user.friends[0].intimacy).to.be.equal('normal')
       }).then(() => done(), done)
     })
+
+    it('update a relationship', done => {
+      user.updateRelationship('friends', user2, { intimacy: 'close' }).then(() => {
+        expect(user.friends[0].intimacy).to.be.equal('close')
+      }).then(() => done(), done)
+    })
   })
 })

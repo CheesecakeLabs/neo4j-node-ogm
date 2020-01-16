@@ -1,5 +1,6 @@
 const createOnlyGetter = (model, fieldName, fget = () => undefined) => {
   Object.defineProperty(model, fieldName, {
+    configurable: true,
     get: function () {
       const value = fget(model._values[fieldName])
       return value

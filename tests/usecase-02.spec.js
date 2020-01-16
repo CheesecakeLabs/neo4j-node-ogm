@@ -21,12 +21,6 @@ describe('Use Cases - 02', () => {
         expect(user.email).to.be.equal('emailupdated@domain.com')
       }).then(() => done(), done)
     })
-
-    it('findByID to get updated user', done => {
-      User.findByID(user_id).then(updatedUser => {
-        expect(updatedUser.email).to.be.equal('emailupdated@domain.com')
-      }).then(() => done(), done)
-    })
   })
 
   describe('::findAll', () => {

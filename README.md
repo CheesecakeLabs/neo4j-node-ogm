@@ -20,12 +20,14 @@ import { getConnection } from 'neo4j-node-ogm'
 const database = getConnection()
 
 try {
-  const result = await database.cypher('MATCH (users:Users {name : $nameParam}) RETURN users', {
+  const session = database.session()
+  const result = await session.run('MATCH (users:Users {name : $nameParam}) RETURN users', {
     nameParam: 'Natam'
   })
   result.records.forEach(record => {
     console.log(record.get('name'))
   })
+  session.close()
 } catch(e) {
   console.log(e)
 }
@@ -35,57 +37,66 @@ try {
 import { Model, Field } from 'neo4j-node-ogm'
 
 class Text extends Model {
-  _labels = ['Text']
-  _attributes = {
-    value: Field.String()
+  constructor (values) {
+    const labels = ['Text']
+    const attributes = {
+      value: Field.String()
+    }
+    super(values, labels, attributes)
   }
 }
 
 class Role extends Model {
-  _labels = ['Role']
-  _attributes = {
-    key: Field.String({
-      required: true,
-      set: (value) => {
-        return value.toUpperCase()
-      },
-      get: (value) => {
-        return `key-${value}`
-      }
-    }),
-    name: Field.Relationship({
-      with: true,
-      labels: ['TRANSLATE'],
-      target: Text,
-      filter_relationship: {
-        language: 'en_US'
-      }
-    })
+  constructor (values) {
+    const labels = ['Role']
+    const attributes = {
+      key: Field.String({
+        required: true,
+        set: (value) => {
+          return value.toUpperCase()
+        },
+        get: (value) => {
+          return `key-${value}`
+        }
+      }),
+      name: Field.Relationship({
+        with: true,
+        labels: ['TRANSLATE'],
+        target: Text,
+        filter_relationship: {
+          language: 'en_US'
+        }
+      })
+    }
+    super(values, labels, attributes)
   }
 }
 
 class User extends Model {
-  _labels = ['User']
-  _attributes = {
-    name: Field.String(),
-    email: Field.String({
-      max_length: 255
-    }),
-    password: Field.Hash(),
-    created_at: Field.DateTime({
-      default: 'NOW',
-    }),
-    role: Field.Relationship({
-      labels: ['HAS_ROLE'],
-      target: Role,
-    }), // role : Role
-    friends: Field.Relationships({
-      labels: ['FRIENDSHIP'],
-      target: User,
-      attributes: {
-        intimacy: Field.String()
-      }
-    }) // friends : [User]
+  constructor (values) {
+    const labels = ['User']
+    const attributes = {
+      name: Field.String(),
+      email: Field.String({
+        max_length: 255
+      }),
+      password: Field.Hash(),
+      created_at: Field.DateTime({
+        default: 'NOW'
+      }),
+      role: Field.Relationship({
+        labels: ['HAS_ROLE'],
+        target: Role
+      }), // role : { label: 'HAS_ROLE': children: Node }
+      friends: Field.Relationships({
+        labels: ['FRIENDSHIP'],
+        target: User,
+        attributes: {
+          intimacy: Field.String()
+        }
+      }) // friends : { label: 'FRIENDSHIP': children: [Node, ...] }
+    }
+    super(values, labels, attributes)
   }
 }
 ```

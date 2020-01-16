@@ -31,7 +31,7 @@ class Cypher {
     }
   }
 
-  match (node, previousAlias = false, relationship = false, targetModel = false, putOnReturn = true) {
+  match (node, previousAlias = false, relationship = false, targetModel = false, dontPutOnReturn = false) {
     if (targetModel) {
       const relationName = `${node.getAliasName()}_${previousAlias}${relationship}`
 
@@ -43,12 +43,12 @@ class Cypher {
       this.matchs.push(`OPTIONAL MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(previousAlias)})`)
       this.nodes.push(previousAlias)
     } else {
-      if (putOnReturn) {
+      if (!dontPutOnReturn) {
         this.matchs.push(`MATCH (${node.getCypherName()})`)
         this.nodes.push(node.getAliasName())
         this.return[node.getAliasName()] = node
       } else {
-        this.matchs.push(`, (${node.getCypherName()})`)
+        this.matchs.push(`, (${dontPutOnReturn}:${node.getNodeName()})`)
       }
     }
   }
@@ -171,10 +171,9 @@ class Cypher {
     // console.log(stmt)
     const session = await database.session()
 
-    let result
+    let result = true
     try {
       await session.run(stmt)
-      result = true
     } catch (e) {
       result = false
     }
@@ -184,12 +183,12 @@ class Cypher {
     return result
   }
 
-  async relate (node1, relation, node2) {
+  async relate (node1, relation, node2, create = true) {
     this.writeWhere()
     this.writeReturn(this.return)
     this.writeSets(' , ')
     const stmt = `${this.matchs.join(' ')} ${this.whereString}
-                  CREATE (${node1.getAliasName()})-[${node1.getAliasName()}_${node2.getAliasName()}:${relation.getLabelName()}]->(${node2.getAliasName()})
+                  ${create ? 'CREATE' : 'MATCH'} (${node1.getAliasName()})-[${node1.getAliasName()}_${relation.attr}:${relation.getLabelName()}]->(${node2.getAliasName()})
                   ${this.setString} RETURN ${this.returnString}`
 
     const session = database.session()

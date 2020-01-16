@@ -111,8 +111,8 @@ class Model {
     return true
   }
 
-  addMatchs (node) {
-    this.cypher.match(node, false, false, false, false)
+  addMatchs (node, attr) {
+    this.cypher.match(node, false, false, false, attr)
   }
 
   /**
@@ -235,16 +235,18 @@ class Model {
   }
 
   /**
-  * Create a relation between the nodes
+  * Relate nodes
   *
   * @param {String} attr
   * @param {Model} node
   * @param {JSON} attributes
   */
-  async createRelationship (attr, node, attributes = {}) {
+  async relate (attr, node, attributes = {}, create = true) {
+    // CLEAN OLD _WITHS TO NOT INTERFERE
+    this._with = []
     this.cypher = new Cypher()
     this.doMatchs(this)
-    this.addMatchs(node)
+    this.addMatchs(node, attr)
     // ADD TO _WITH TO RETURN THE RELATION
     this._with = [[attr]]
     this.cypher.addWhere({
@@ -252,7 +254,7 @@ class Model {
       value: this.id
     })
     this.cypher.addWhere({
-      attr: `id(${node.getAliasName()})`,
+      attr: `id(${attr})`,
       value: node.id
     })
     // ADD THE ATTRIBUTES ON RELATION
@@ -261,9 +263,32 @@ class Model {
     })
     // CREATE THE RELATION
     const field = this._attributes[attr]
-    const data = await this.cypher.relate(this, field, node)
+    field.attr = attr
+    const data = await this.cypher.relate(this, field, node, create)
     const fields = data._fields[0] // JSON from database
     this.hydrate(this, fields)
+  }
+
+  /**
+  * Update a relation between the nodes
+  *
+  * @param {String} attr
+  * @param {Model} node
+  * @param {JSON} attributes
+  */
+  async updateRelationship (attr, node, attributes = {}) {
+    return this.relate(attr, node, attributes, false)
+  }
+
+  /**
+  * Create a relation between the nodes
+  *
+  * @param {String} attr
+  * @param {Model} node
+  * @param {JSON} attributes
+  */
+  async createRelationship (attr, node, attributes = {}) {
+    return this.relate(attr, node, attributes, true)
   }
 
   static async findByID (id) {

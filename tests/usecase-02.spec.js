@@ -17,7 +17,9 @@ describe('Use Cases - 02', () => {
 
     it('update', done => {
       user.email = 'emailupdated@domain.com'
-      user.save().then(() => done(), done)
+      user.save().then(() => {
+        expect(user.email).to.be.equal('emailupdated@domain.com')
+      }).then(() => done(), done)
     })
 
     it('findByID to get updated user', done => {

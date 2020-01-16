@@ -218,7 +218,9 @@ class Model {
         }
       })
       const data = await this.cypher.update()
-      return data
+      const fields = data._fields[0] // JSON from database
+
+      this.hydrate(this, fields)
     } else {
       // create
       this.doMatchs(this, false)

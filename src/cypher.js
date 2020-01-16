@@ -154,7 +154,7 @@ class Cypher {
     let result
     try {
       result = await session.run(stmt)
-      result = result.records[0]._fields[0].id
+      result = result.records[0]
     } catch (e) {
       result = false
     }

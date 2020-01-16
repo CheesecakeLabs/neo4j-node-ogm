@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import md5 from 'crypto-js/md5'
 import { User, Role, Text } from './models'
-import { getConnection } from '../src'
+import { getConnection } from '../build'
 
 describe('Use Cases - 01', () => {
   describe('::clean database', () => {

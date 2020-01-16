@@ -1,4 +1,4 @@
-import { Model, Field } from '../src'
+import { Model, Field } from '../build'
 
 class Text extends Model {
   constructor (values) {

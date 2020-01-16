@@ -1,4 +1,4 @@
-FROM neo4j:3.5
+FROM neo4j:3.5.6
 
 ENV NEO4J_AUTH=neo4j/letmein
 

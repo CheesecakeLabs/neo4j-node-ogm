@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { User, Role, Text } from './models'
+import { User, Role } from './models'
 
 describe('Use Cases - 03', () => {
   describe('::relationship', () => {

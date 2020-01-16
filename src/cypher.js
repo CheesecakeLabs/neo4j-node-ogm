@@ -146,7 +146,7 @@ class Cypher {
   async update () {
     this.writeWhere()
     this.writeSets(' , ')
-    this.writeReturn(this.return, false)
+    this.writeReturn(this.return)
     const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.returnString}`
     // console.log(stmt)
     const session = await database.session()

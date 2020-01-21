@@ -31,6 +31,10 @@ class Cypher {
     }
   }
 
+  addReturn (key, value) {
+    this.return[key] = value
+  }
+
   match (node, previousAlias = false, relationship = false, targetModel = false, dontPutOnReturn = false) {
     if (targetModel) {
       const relationName = `${node.getAliasName()}_${previousAlias}${relationship}`
@@ -46,7 +50,7 @@ class Cypher {
       if (!dontPutOnReturn) {
         this.matchs.push(`MATCH (${node.getCypherName()})`)
         this.nodes.push(node.getAliasName())
-        this.return[node.getAliasName()] = node
+        this.addReturn(node.getAliasName(), node)
       } else {
         this.matchs.push(`, (${dontPutOnReturn}:${node.getNodeName()})`)
       }

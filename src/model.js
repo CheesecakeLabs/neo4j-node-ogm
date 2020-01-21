@@ -78,7 +78,7 @@ class Model {
     return ret
   }
 
-  doMatchs (node, relation, level = 0) {
+  doMatchs (node, relation, level = 0, onlyRelation = false) {
     if (relation) {
       this.cypher.match(
         relation.previousNode,
@@ -86,6 +86,8 @@ class Model {
         relation.relationship,
         node
       )
+    } else if (onlyRelation) {
+      this.cypher.addReturn(node.getAliasName(), node)
     } else {
       this.cypher.match(node)
     }
@@ -339,7 +341,8 @@ class Model {
     })
 
     self.cypher = new Cypher()
-    self.doMatchs(self, false)
+    self.cypher.isDistinct()
+    self.doMatchs(self, false, 0, config.onlyRelation)
     // FILTERS
     config.filterAttributes.forEach(({ key, operator, value }) => {
       const attr = key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key

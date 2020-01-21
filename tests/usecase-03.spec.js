@@ -35,5 +35,11 @@ describe('Use Cases - 03', () => {
         expect(user.friends[0].intimacy).to.be.equal('close')
       }).then(() => done(), done)
     })
+
+    it('fetching a relationship', done => {
+      user.fetch(['role']).then(() => {
+        expect(user.role.key).to.be.equal('key-ADMIN')
+      }).then(() => done(), done)
+    })
   })
 })

@@ -150,7 +150,7 @@ class Model {
             // create getter and setter for that attribute inside _values
             createGetterAndSetter(model, key, attr.set, attr.get)
             // if is array should create the key as array and push for each record
-            model[key] = []
+            model[key] = new Collection()
             dataJSON[key].forEach(data => {
               const targetModel = new attr.target()
               const hydrated = this.hydrate(targetModel, data, level + 1, false, attr)

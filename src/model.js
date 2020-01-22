@@ -295,11 +295,11 @@ class Model {
     return this.relate(attr, node, attributes, true)
   }
 
-  static async findByID (id) {
+  static async findByID (id, with_related = []) {
     const self = new this()
 
     const config = {
-      with_related: [],
+      with_related,
       filterAttributes: [{
         key: `id(${self.getAliasName()})`,
         value: id

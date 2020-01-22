@@ -1,6 +1,6 @@
 class Collection extends Array {
   toJSON () {
-    return this.map(item => item.toJSON)
+    return this.map(item => item.toJSON())
   }
 
   async deleteAll (detach = false) {

@@ -139,7 +139,7 @@ class Cypher {
       result = await session.run(stmt)
       result = result.records[0]
     } catch (e) {
-      result = false
+      throw new Error(`Cypher ERROR: ${e.message}`)
     }
 
     session.close()
@@ -160,7 +160,7 @@ class Cypher {
       result = await session.run(stmt)
       result = result.records[0]
     } catch (e) {
-      result = false
+      throw new Error(`Cypher ERROR: ${e.message}`)
     }
 
     session.close()
@@ -179,7 +179,7 @@ class Cypher {
     try {
       await session.run(stmt)
     } catch (e) {
-      result = false
+      throw new Error(`Cypher ERROR: ${e.message}`)
     }
 
     session.close()
@@ -197,10 +197,14 @@ class Cypher {
 
     const session = database.session()
     // console.log(stmt)
-    const result = await session.run(stmt)
-    session.close()
-    this.clean()
-    return result.records[0]
+    try {
+      const result = await session.run(stmt)
+      session.close()
+      this.clean()
+      return result.records[0]
+    } catch (e) {
+      throw new Error(`Cypher ERROR: ${e.message}`)
+    }
   }
 
   async find () {
@@ -210,10 +214,14 @@ class Cypher {
 
     const session = database.session()
     // console.log(stmt)
-    const result = await session.run(stmt)
-    session.close()
-    this.clean()
-    return result.records
+    try {
+      const result = await session.run(stmt)
+      session.close()
+      this.clean()
+      return result.records
+    } catch (e) {
+      throw new Error(`Cypher ERROR: ${e.message}`)
+    }
   }
 }
 

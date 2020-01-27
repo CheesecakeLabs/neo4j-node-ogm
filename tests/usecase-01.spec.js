@@ -28,6 +28,7 @@ describe('Use Cases - 01', () => {
         email: 'email2@domain.com',
         password: 12345
       })
+
       const p1 = user.save()
       const p2 = user2.save()
 
@@ -36,7 +37,18 @@ describe('Use Cases - 01', () => {
         expect(user.name).to.be.equal('User UseCase Test')
         expect(user.email).to.be.equal('email@domain.com')
         expect(user.password).to.be.equal(md5('12345').toString())
+        expect(user.created_at).to.not.be.null
       }).then(() => done(), done)
+    })
+
+    it('throw required field', done => {
+      const user = new User({
+        name: 'User without email'
+      })
+      user.save().catch(error => {
+        expect(error.message).to.be.equal('Field: email is required')
+        done()
+      })
     })
 
     it('create a simple role', done => {

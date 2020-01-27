@@ -18,7 +18,7 @@ class Field {
       required: false,
       filter_relationship: false,
       target: false,
-      default: undefined,
+      default: false,
       min_length: false,
       max_length: false,
       attributes: false,
@@ -150,7 +150,8 @@ class Field {
    */
   static DateTime (obj = {}) {
     const field = new this({
-      required: obj.required
+      required: obj.required,
+      default: obj.default
     })
     return field
   }

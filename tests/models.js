@@ -42,11 +42,12 @@ class User extends Model {
     const attributes = {
       name: Field.String(),
       email: Field.String({
-        max_length: 255
+        max_length: 255,
+        required: true
       }),
       password: Field.Hash(),
       created_at: Field.DateTime({
-        default: 'NOW'
+        default: () => new Date()
       }),
       role: Field.Relationship({
         labels: ['HAS_ROLE'],

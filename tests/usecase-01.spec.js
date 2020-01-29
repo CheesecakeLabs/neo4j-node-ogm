@@ -19,6 +19,7 @@ describe('Use Cases - 01', () => {
     it('create a simple user', done => {
       const user = new User({
         name: 'User UseCase Test',
+        language: 'pt_BR',
         password: 12345
       })
       user.email = 'email@domain.com'
@@ -26,6 +27,7 @@ describe('Use Cases - 01', () => {
       const user2 = new User({
         name: 'User UseCase Test',
         email: 'email2@domain.com',
+        language: 'pt_BR',
         password: 12345
       })
 
@@ -47,6 +49,18 @@ describe('Use Cases - 01', () => {
       })
       user.save().catch(error => {
         expect(error.message).to.be.equal('Field: email is required')
+        done()
+      })
+    })
+
+    it('throw valid field', done => {
+      const user = new User({
+        name: 'User without valid language',
+        email: 'email@test.com',
+        language: 'pt_PT'
+      })
+      user.save().catch(error => {
+        expect(error.message).to.be.equal('Field: language is not a valid option ["pt_BR","en_US"]')
         done()
       })
     })

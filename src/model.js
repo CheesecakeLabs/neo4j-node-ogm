@@ -180,23 +180,6 @@ class Model {
     return model
   }
 
-  /**
-   * Check validations for each Field
-   *
-   * @param {String} key
-   * @param {Object} field
-   */
-  checkFieldValidation (key, field) {
-    // default
-    if (!this._values[key] && field.default) {
-      this._values[key] = (field.default instanceof Function) ? field.default() : field.default
-    }
-    // required
-    if (field.required && !this._values[key]) {
-      throw new Error(`Field: ${key} is required`)
-    }
-  }
-
   async fetch (with_related = []) {
     return this.constructor.findAll({
       filterAttributes: [
@@ -230,7 +213,7 @@ class Model {
       this.cypher.isDistinct()
       this.doMatchs(this, false)
       Object.entries(this._attributes).forEach(([key, field]) => {
-        this.checkFieldValidation(key, field)
+        this._values[key] = field.checkValidation(key, this._values[key])
         if (field.isModel === false) {
           this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
         } else {
@@ -245,7 +228,7 @@ class Model {
       // create
       this.doMatchs(this, false)
       Object.entries(this._attributes).forEach(([key, field]) => {
-        this.checkFieldValidation(key, field)
+        this._values[key] = field.checkValidation(key, this._values[key])
         if (field.isModel === false) {
           this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
         }

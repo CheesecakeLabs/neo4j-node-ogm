@@ -16,6 +16,7 @@ class Field {
       isModel: false,
       isArray: false,
       required: false,
+      valid: false,
       filter_relationship: false,
       target: false,
       default: false,
@@ -39,6 +40,32 @@ class Field {
    */
   getLabelName () {
     return this.labels.join(':').toUpperCase()
+  }
+
+  /**
+   * Check validations for each Field
+   *
+   * @param {String} key
+   * @param {String} value
+   */
+  checkValidation (key, value) {
+    // default
+    if (!value && this.default) {
+      return (this.default instanceof Function) ? this.default() : this.default
+    }
+    // valid
+    if (
+      (this.required && this.valid && !this.valid.includes(value)) ||
+      (value && this.valid && !this.valid.includes(value))
+    ) {
+      throw new Error(`Field: ${key} is not a valid option ${JSON.stringify(this.valid)}`)
+    }
+    // required
+    if (this.required && !value) {
+      throw new Error(`Field: ${key} is required`)
+    }
+
+    return value
   }
 
   /**

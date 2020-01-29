@@ -77,6 +77,9 @@ class User extends Model {
     const labels = ['User']
     const attributes = {
       name: Field.String(),
+      language: Field.String({
+        valid: ['pt_BR', 'en_US']
+      }),
       email: Field.String({
         max_length: 255,
         required: true

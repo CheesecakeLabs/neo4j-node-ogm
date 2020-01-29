@@ -60,6 +60,10 @@ class Field {
     ) {
       throw new Error(`Field: ${key} is not a valid option ${JSON.stringify(this.valid)}`)
     }
+    // max_length
+    if (this.max_length && value && value.length > this.max_length) {
+      throw new Error(`Field: ${key} has more than ${this.max_length} characters`)
+    }
     // required
     if (this.required && !value) {
       throw new Error(`Field: ${key} is required`)

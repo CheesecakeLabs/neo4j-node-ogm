@@ -65,6 +65,17 @@ describe('Use Cases - 01', () => {
       })
     })
 
+    it('throw max_length field', done => {
+      const user = new User({
+        name: 'User max_length',
+        email: 'max_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_length@domain.com'
+      })
+      user.save().catch(error => {
+        expect(error.message).to.be.equal('Field: email has more than 255 characters')
+        done()
+      })
+    })
+
     it('create a simple role', done => {
       const role = new Role({
         key: 'admin'

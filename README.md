@@ -188,8 +188,8 @@ await users.deleteAll()
 ## API
 
 Model static async functions:
-* findAll({ with_related, filterAttributes, skip, limit }) - return a Node's Collection
-* findBy(filterAttributes, { with_related, skip, limit }) - return a Node's Collection
+* findAll({ with_related, filterAttributes, order_by, skip, limit }) - return a Node's Collection
+* findBy(filterAttributes, { with_related, order_by, skip, limit }) - return a Node's Collection
 * findByID(Integer id) - return a Node
 
 Model async functions:
@@ -252,7 +252,8 @@ Fields type:
 | option | type | description | example |
 | -- | -- | -- | -- |
 | attributes | Object | Can be at Model (starts with _ ex: _attributes) or Field Relationship. Each item of the Array should be a name of one field in `String` format | `_attributes = { name: Field.String() }`  |
-| default | Object/String/Integer | Default value for the attribute | ` default: 10 ` |
+| default | Function/String/Integer | Default value for the attribute | ` default: 10 ` |
+| order_by | Array bidimensional | Ordenation of the results | ` order_by: [['email', 'DESC'], ['name', 'ASC']] ` |
 | filter_node | Object | This object is used to filter(where) at relations and will be applied at node | ` filter_node: { name: 'Natam' } ` |
 | filter_relationship | Object | This object is used to filter(where) at relations and will be applied at relationship | ` filter_relationship: { language: 'en_US' } ` |
 | get | Function | A function to override the get attribute of the Model | ```get: (value) => { return `key-${value}` }``` |

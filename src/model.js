@@ -333,7 +333,8 @@ class Model {
     config = Object.assign({
       with_related: [],
       filterAttributes: [],
-      onlyRelation: false
+      onlyRelation: false,
+      order_by: []
     },
     config)
 
@@ -349,6 +350,11 @@ class Model {
     config.filterAttributes.forEach(({ key, operator, value }) => {
       const attr = key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
       self.cypher.addWhere({ attr, operator, value })
+    })
+
+    config.order_by.forEach(([key, direction]) => {
+      const attr = key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
+      self.cypher.addOrderBy(attr, direction || 'ASC')
     })
 
     const data = await self.cypher.find()

@@ -64,6 +64,10 @@ class Field {
     if (this.max_length && value && value.length > this.max_length) {
       throw new Error(`Field: ${key} has more than ${this.max_length} characters`)
     }
+    // min_length
+    if (this.min_length && value && value.length < this.min_length) {
+      throw new Error(`Field: ${key} has less than ${this.min_length} characters`)
+    }
     // required
     if (this.required && !value) {
       throw new Error(`Field: ${key} is required`)

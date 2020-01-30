@@ -13,6 +13,8 @@ class Cypher {
     this.whereString = ''
     this.sets = []
     this.setString = ''
+    this.orders = []
+    this.orderString = ''
     this.return = {}
     this.returnString = ''
     this.distinct = ''
@@ -66,6 +68,16 @@ class Cypher {
   writeSets (CONCAT = ' AND ') {
     if (this.sets.length > 0) {
       this.setString = `SET ${this.sets.join(CONCAT)}`
+    }
+  }
+
+  addOrderBy (attr, direction) {
+    this.orders.push(`${attr} ${direction}`)
+  }
+
+  writeOrderBy (CONCAT = ' , ') {
+    if (this.orders.length > 0) {
+      this.orderString = `ORDER BY ${this.orders.join(CONCAT)}`
     }
   }
 
@@ -210,7 +222,10 @@ class Cypher {
   async find () {
     this.writeWhere()
     this.writeReturn(this.return)
-    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.distinct} ${this.returnString}`
+    this.writeOrderBy()
+    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString}
+                  RETURN ${this.distinct} ${this.returnString}
+                  ${this.orderString}`
 
     const session = database.session()
     // console.log(stmt)

@@ -25,8 +25,22 @@ describe('Use Cases - 02', () => {
 
   describe('::findAll', () => {
     it('get all users', done => {
-      User.findAll().then(users => {
-        expect(users).to.have.lengthOf.at.least(1)
+      User.findAll({
+        orderBy: [
+          ['email', 'ASC']
+        ]
+      }).then(users => {
+        expect(users[0].email).to.be.equal('email@domain.com')
+      }).then(() => done(), done)
+    })
+
+    it('get all users inverse orderby', done => {
+      User.findAll({
+        orderBy: [
+          ['email', 'DESC']
+        ]
+      }).then(users => {
+        expect(users[0].email).to.be.equal('emailupdated@domain.com')
       }).then(() => done(), done)
     })
 

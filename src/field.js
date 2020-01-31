@@ -1,4 +1,4 @@
-import md5 from 'crypto-js/md5'
+import bcrypt from 'bcryptjs'
 
 class Field {
   /**
@@ -138,9 +138,11 @@ class Field {
    * @return {Field}
    */
   static Hash (obj = {}) {
+    const salt = bcrypt.genSaltSync(10)
     const field = new this({
       required: obj.required,
-      set: (value) => md5(`${value}`)
+      set: (value) => bcrypt.hashSync(`${value}`, salt),
+      checkHash: (value, saved) => bcrypt.compareSync(`${value}`, `${saved}`)
     })
     return field
   }

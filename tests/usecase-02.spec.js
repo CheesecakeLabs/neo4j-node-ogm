@@ -26,7 +26,7 @@ describe('Use Cases - 02', () => {
   describe('::findAll', () => {
     it('get all users', done => {
       User.findAll({
-        orderBy: [
+        order_by: [
           ['email', 'ASC']
         ]
       }).then(users => {
@@ -36,7 +36,7 @@ describe('Use Cases - 02', () => {
 
     it('get all users inverse orderby', done => {
       User.findAll({
-        orderBy: [
+        order_by: [
           ['email', 'DESC']
         ]
       }).then(users => {

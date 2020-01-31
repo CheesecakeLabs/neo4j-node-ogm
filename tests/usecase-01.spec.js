@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import md5 from 'crypto-js/md5'
 import { User, Role, Text } from './models'
 import { getConnection } from '../build'
 
@@ -38,7 +37,8 @@ describe('Use Cases - 01', () => {
         expect(user.id).to.be.a('number')
         expect(user.name).to.be.equal('User UseCase Test')
         expect(user.email).to.be.equal('email@domain.com')
-        expect(user.password).to.be.equal(md5('12345').toString())
+        expect(user.password.checkHash('12345')).to.be.true
+        expect(user.password.checkHash(12345)).to.be.true
         expect(user.created_at).to.not.be.null
       }).then(() => done(), done)
     })

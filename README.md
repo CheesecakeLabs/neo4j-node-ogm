@@ -192,12 +192,13 @@ Model static async functions:
 * findBy(filterAttributes, { with_related, order_by, skip, limit }) - return a Node's Collection
 * findByID(Integer id) - return a Node
 
-Model async functions:
+**Model async functions:** these functions can throw a Exception if something fails
 * save() - return Integer ID/false
 * merge(Array fields) - return true/false
 * delete(Bool detach) - return true/false
 * relate(Node from, Node to, Array labels, Object properties)
 * fetch(Array attributes)
+
 
 Fields type:
 * **.String(Object args)**
@@ -220,6 +221,7 @@ Fields type:
   * set
 * **.Hash(Object args)**
   * required
+  In this type of Field `const t = obj.attr` will always return a object with the method `checkHash(value)` for you check your string if is the same as saved but you still can set a new value normally `obj.attr = 123`
 * **.JSON(Object args)**
   * required
   * default

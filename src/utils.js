@@ -11,12 +11,16 @@ const createOnlyGetter = (model, fieldName, fget = () => undefined) => {
   })
 }
 
-const createGetterAndSetter = (model, fieldName, fset = (value) => value, fget = (value) => value) => {
+const createGetterAndSetter = (model, fieldName, fset = (value) => value, fget = (value) => value, checkHash = false) => {
   Object.defineProperty(model, fieldName, {
     configurable: true,
     get: function () {
-      const value = fget(model._values[fieldName])
-      return value
+      if (checkHash) {
+        return { checkHash: (value) => checkHash(value, model._values[fieldName]) }
+      } else {
+        const value = fget(model._values[fieldName])
+        return value
+      }
     },
     set: function (newValue) {
       const value = fset(newValue)

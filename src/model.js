@@ -144,33 +144,33 @@ class Model {
         }
       }
       // hydrate node fields
-      Object.entries(model._attributes).forEach(([key, attr]) => {
+      Object.entries(model._attributes).forEach(([key, field]) => {
         // if is model should hydrate with the right class
-        if (attr.isModel && this.checkWith(level, key)) {
+        if (field.isModel && this.checkWith(level, key)) {
           // with_related is ok, so there is information to hydrate
           if (Array.isArray(dataJSON[key])) {
             // create getter and setter for that attribute inside _values
-            createGetterAndSetter(model, key, attr.set, attr.get)
+            createGetterAndSetter(model, key, field.set, field.get)
             // if is array should create the key as array and push for each record
             model[key] = new Collection()
             dataJSON[key].forEach(data => {
-              const targetModel = new attr.target()
-              const hydrated = this.hydrate(targetModel, data, level + 1, false, attr)
+              const targetModel = new field.target()
+              const hydrated = this.hydrate(targetModel, data, level + 1, false, field)
               // array should be pushed
               model._values[key].push(hydrated)
             })
           } else {
             // hydrate the model
-            const targetModel = new attr.target()
-            const hydrated = this.hydrate(targetModel, dataJSON[key], level + 1, false, attr)
+            const targetModel = new field.target()
+            const hydrated = this.hydrate(targetModel, dataJSON[key], level + 1, false, field)
             // create getter and setter for that attribute inside _values
-            createGetterAndSetter(model, key, attr.set, attr.get)
+            createGetterAndSetter(model, key, field.set, field.get)
             // if not array should be linked at _values directed
             model._values[key] = hydrated
           }
         } else if (!onlyRelation) {
           // create getter and setter for that attribute inside _values
-          createGetterAndSetter(model, key, attr.set, attr.get)
+          createGetterAndSetter(model, key, field.set, field.get, field.checkHash)
           // just a value of the model
           model._values[key] = dataJSON[key]
         }

@@ -2,6 +2,21 @@ import { expect } from 'chai'
 import { User, Role } from './models'
 
 describe('Use Cases - 03', () => {
+  describe('::skip and limit', () => {
+    it('should select the first one', done => {
+      User.findAll({ skip: 0, limit: 1 }).then(users => {
+        expect(users[0].email).to.be.equal('emailupdated@domain.com')
+        expect(users).to.have.lengthOf(1)
+      }).then(() => done(), done)
+    })
+
+    it('should select the second one', done => {
+      User.findAll({ skip: 1, limit: 1 }).then(users => {
+        expect(users[0].email).to.be.equal('email@domain.com')
+        expect(users).to.have.lengthOf(1)
+      }).then(() => done(), done)
+    })
+  })
   describe('::relationship', () => {
     let role
     let user

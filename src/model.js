@@ -334,7 +334,9 @@ class Model {
       with_related: [],
       filterAttributes: [],
       onlyRelation: false,
-      order_by: []
+      order_by: [],
+      skip: '',
+      limit: ''
     },
     config)
 
@@ -345,6 +347,8 @@ class Model {
 
     self.cypher = new Cypher()
     self.cypher.isDistinct()
+    self.cypher.skip = config.skip
+    self.cypher.limit = config.limit
     self.doMatchs(self, false, 0, config.onlyRelation)
     // FILTERS
     config.filterAttributes.forEach(({ key, operator, value }) => {

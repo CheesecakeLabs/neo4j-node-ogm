@@ -18,6 +18,8 @@ class Cypher {
     this.return = {}
     this.returnString = ''
     this.distinct = ''
+    this.skip = ''
+    this.limit = ''
     this.stmt = stmt
   }
 
@@ -225,7 +227,7 @@ class Cypher {
     this.writeOrderBy()
     const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString}
                   RETURN ${this.distinct} ${this.returnString}
-                  ${this.orderString}`
+                  ${this.orderString} ${this.skip ? `SKIP ${this.skip}` : ''} ${this.limit ? `LIMIT ${this.limit}` : ''}`
 
     const session = database.session()
     // console.log(stmt)

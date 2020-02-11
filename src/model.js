@@ -148,7 +148,7 @@ class Model {
         // if is model should hydrate with the right class
         if (field.isModel && this.checkWith(level, key)) {
           // with_related is ok, so there is information to hydrate
-          if (Array.isArray(dataJSON[key])) {
+          if (field.isArray) {
             // create getter and setter for that attribute inside _values
             createGetterAndSetter(model, key, field.set, field.get)
             // if is array should create the key as array and push for each record

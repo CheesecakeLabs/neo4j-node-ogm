@@ -202,6 +202,20 @@ class Model {
     return data
   }
 
+  setAttributes (create = true) {
+    Object.entries(this._attributes).forEach(([key, field]) => {
+      const defaultValue = field.hasDefaultValue(this._values[key])
+      if (defaultValue) this[key] = defaultValue
+
+      this._values[key] = field.checkValidation(key, this._values[key])
+      if (field.isModel === false) {
+        this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
+      } else if (create) {
+        // TODO: add the relation
+      }
+    })
+  }
+
   async save () {
     this.cypher = new Cypher()
     if (this.id) {
@@ -212,14 +226,9 @@ class Model {
       })
       this.cypher.isDistinct()
       this.doMatchs(this, false)
-      Object.entries(this._attributes).forEach(([key, field]) => {
-        this._values[key] = field.checkValidation(key, this._values[key])
-        if (field.isModel === false) {
-          this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
-        } else {
-          // TODO: add the relation
-        }
-      })
+
+      this.setAttributes()
+
       const data = await this.cypher.update()
       const fields = data._fields[0] // JSON from database
 
@@ -227,12 +236,9 @@ class Model {
     } else {
       // create
       this.doMatchs(this, false)
-      Object.entries(this._attributes).forEach(([key, field]) => {
-        this._values[key] = field.checkValidation(key, this._values[key])
-        if (field.isModel === false) {
-          this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
-        }
-      })
+
+      this.setAttributes(false)
+
       const data = await this.cypher.create(this.getCypherName())
 
       const fields = data._fields[0] // JSON from database

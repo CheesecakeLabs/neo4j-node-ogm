@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs'
+import { parseISOString } from './utils'
 
 class Field {
   /**
@@ -43,16 +44,25 @@ class Field {
   }
 
   /**
+   * Check if has Default value and return
+   *
+   * @param {String} value
+   */
+  hasDefaultValue (value) {
+    if (!value && this.default) {
+      return (this.default instanceof Function) ? this.default() : this.default
+    }
+
+    return false
+  }
+
+  /**
    * Check validations for each Field
    *
    * @param {String} key
    * @param {String} value
    */
   checkValidation (key, value) {
-    // default
-    if (!value && this.default) {
-      return (this.default instanceof Function) ? this.default() : this.default
-    }
     // valid
     if (
       (this.required && this.valid && !this.valid.includes(value)) ||
@@ -188,7 +198,9 @@ class Field {
   static DateTime (obj = {}) {
     const field = new this({
       required: obj.required,
-      default: obj.default
+      default: obj.default,
+      set: (objDate) => objDate.toISOString(),
+      get: (value) => parseISOString(value)
     })
     return field
   }

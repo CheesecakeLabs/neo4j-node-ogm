@@ -206,7 +206,7 @@ class Cypher {
     this.writeReturn(this.return)
     this.writeSets(' , ')
     const stmt = `${this.matchs.join(' ')} ${this.whereString}
-                  ${create ? 'CREATE' : 'MATCH'} (${node1.getAliasName()})-[${node1.getAliasName()}_${relation.attr}:${relation.getLabelName()}]->(${node2.getAliasName()})
+                  ${create ? 'CREATE' : 'MATCH'} (${node1.getAliasName()})-[${node1.getAliasName()}_${relation.attr}:${relation.getLabelName()}]->(${relation.attr})
                   ${this.setString} RETURN ${this.returnString}`
 
     const session = database.session()

@@ -167,7 +167,7 @@ class Cypher {
     this.writeSets(' , ')
     this.writeReturn(this.return)
     const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.returnString}`
-    console.log(stmt)
+    // console.log(stmt)
     const session = await database.session()
 
     let result

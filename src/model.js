@@ -303,16 +303,13 @@ class Model {
     return this.relate(attr, node, attributes, true)
   }
 
-  static async findByID (id, with_related = []) {
+  static async findByID (id, config = {}) {
     const self = new this()
 
-    const config = {
-      with_related,
-      filterAttributes: [{
-        key: `id(${self.getAliasName()})`,
-        value: id
-      }]
-    }
+    config.filterAttributes = [{
+      key: `id(${self.getAliasName()})`,
+      value: id
+    }]
 
     const data = await this.findAll(config)
 
@@ -342,7 +339,8 @@ class Model {
       onlyRelation: false,
       order_by: [],
       skip: '',
-      limit: ''
+      limit: '',
+      optional: true
     },
     config)
 
@@ -353,6 +351,7 @@ class Model {
 
     self.cypher = new Cypher()
     self.cypher.isDistinct()
+    self.cypher.optional = config.optional
     self.cypher.skip = config.skip
     self.cypher.limit = config.limit
     self.doMatchs(self, false, 0, config.onlyRelation)

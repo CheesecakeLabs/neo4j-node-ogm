@@ -21,6 +21,7 @@ class Cypher {
     this.skip = ''
     this.limit = ''
     this.stmt = stmt
+    this.optional = true
   }
 
   addWhere ({ attr, operator = '=', value }) {
@@ -48,7 +49,7 @@ class Cypher {
         filterRelationship = '{' + Object.entries(targetModel.filter_relationship).map(([key, value]) => `${key}:'${value}'`).join(', ') + '}'
       }
 
-      this.matchs.push(`OPTIONAL MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(previousAlias)})`)
+      this.matchs.push(`${this.optional ? 'OPTIONAL' : ''} MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(previousAlias)})`)
       this.nodes.push(previousAlias)
     } else {
       if (!dontPutOnReturn) {

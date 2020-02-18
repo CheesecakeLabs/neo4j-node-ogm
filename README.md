@@ -149,7 +149,8 @@ const users = User.findBy([
   { key: 'name', operator: 'STARTS WITH', value: 'Na'},
   { key: 'role.key', value: 'admin'}
 ], {
-  with: ['role__name']
+  with_related: ['role__name'],
+  optional: false // thats force to the with_related exists
 })
 ```
 

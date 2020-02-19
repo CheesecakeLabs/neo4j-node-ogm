@@ -167,7 +167,6 @@ class Cypher {
     this.writeSets(' , ')
     this.writeReturn(this.return)
     const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.returnString}`
-    // console.log(stmt)
     const session = await database.session()
 
     let result
@@ -190,7 +189,6 @@ class Cypher {
     // console.log(stmt)
     const session = await database.session()
 
-    let result = true
     try {
       await session.run(stmt)
     } catch (e) {
@@ -199,7 +197,7 @@ class Cypher {
 
     session.close()
     this.clean()
-    return result
+    return true
   }
 
   async relate (node1, relation, node2, create = true) {

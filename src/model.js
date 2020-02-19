@@ -218,7 +218,17 @@ class Model {
 
   async save () {
     this.cypher = new Cypher()
-    if (this.id) {
+    if (this.id === undefined) {
+      // create
+      this.doMatchs(this, false)
+
+      this.setAttributes(false)
+
+      const data = await this.cypher.create(this.getCypherName())
+
+      const fields = data._fields[0] // JSON from database
+      this.hydrate(this, fields)
+    } else {
       // update
       this.cypher.addWhere({
         attr: `id(${this.getAliasName()})`,
@@ -232,16 +242,6 @@ class Model {
       const data = await this.cypher.update()
       const fields = data._fields[0] // JSON from database
 
-      this.hydrate(this, fields)
-    } else {
-      // create
-      this.doMatchs(this, false)
-
-      this.setAttributes(false)
-
-      const data = await this.cypher.create(this.getCypherName())
-
-      const fields = data._fields[0] // JSON from database
       this.hydrate(this, fields)
     }
   }

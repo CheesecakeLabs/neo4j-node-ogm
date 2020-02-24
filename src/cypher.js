@@ -111,7 +111,7 @@ class Cypher {
           if (field.isModel && level < 1) {
             willCollect = true
           }
-          this.modelReturn(`${attr}:${willCollect ? 'collect(' + attr : attr}`, new field.target(), attr, level + 1, willCollect, { field, model })
+          this.modelReturn(`${attr}:${willCollect ? 'collect(' + this.distinct + attr : attr}`, new field.target(), attr, level + 1, willCollect, { field, model })
         }
       } else {
         if (!model.parent) {

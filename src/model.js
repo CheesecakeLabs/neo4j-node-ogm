@@ -21,20 +21,36 @@ class Model {
     })
   }
 
+  /**
+   * Start the retrieve Info based on actual Node
+  */
   toJSON () {
-    return this.retriveInfo(this._values)
+    return this.retriveInfo(this)
   }
 
-  retriveInfo (modelValues) {
-    Object.entries(modelValues).forEach(([key, value]) => {
-      if (value && value._values) {
-        modelValues[key] = this.retriveInfo(value._values)
-      } else {
-        modelValues[key] = value
+  /**
+   * Retrieve Info from Node as a JSON, only with clean data
+   *
+   * @param {Object} model
+  */
+  retriveInfo (model) {
+    const data = {}
+    data.id = model.id
+    Object.entries(model._attributes).forEach(([key, attr]) => {
+      const value = model._values
+
+      switch (attr.type) {
+        case 'hash': break
+        case 'relationship':
+        case 'relationships':
+          if (value && value._values) data[key] = this.retriveInfo(value)
+          break
+        default:
+          data[key] = model[key]
       }
     })
 
-    return modelValues
+    return data
   }
 
   getAliasName () {

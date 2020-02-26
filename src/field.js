@@ -14,6 +14,7 @@ class Field {
     })
     // create default configs
     config = Object.assign({
+      type: null,
       isModel: false,
       isArray: false,
       required: false,
@@ -95,6 +96,7 @@ class Field {
    */
   static String (obj = {}) {
     const field = new this({
+      type: 'string',
       set: obj.set,
       get: obj.get,
       required: obj.required,
@@ -115,6 +117,7 @@ class Field {
    */
   static Integer (obj = {}) {
     const field = new this({
+      type: 'integer',
       set: obj.set,
       get: obj.get,
       required: obj.required,
@@ -132,6 +135,7 @@ class Field {
    */
   static Float (obj = {}) {
     const field = new this({
+      type: 'float',
       set: obj.set,
       get: obj.get,
       required: obj.required,
@@ -150,6 +154,7 @@ class Field {
   static Hash (obj = {}) {
     const salt = bcrypt.genSaltSync(10)
     const field = new this({
+      type: 'hash',
       required: obj.required,
       set: (value) => bcrypt.hashSync(`${value}`, salt),
       checkHash: (value, saved) => bcrypt.compareSync(`${value}`, `${saved}`)
@@ -166,6 +171,7 @@ class Field {
    */
   static JSON (obj = {}) {
     const field = new this({
+      type: 'json',
       required: obj.required,
       default: obj.default,
       set: (value) => JSON.stringify(value),
@@ -183,6 +189,7 @@ class Field {
    */
   static Boolean (obj = {}) {
     const field = new this({
+      type: 'boolean',
       default: obj.default
     })
     return field
@@ -197,6 +204,7 @@ class Field {
    */
   static DateTime (obj = {}) {
     const field = new this({
+      type: 'datetime',
       required: obj.required,
       default: obj.default,
       set: (objDate) => objDate.toISOString(),
@@ -214,6 +222,7 @@ class Field {
    */
   static Date (obj = {}) {
     const field = new this({
+      type: 'date',
       required: obj.required,
       default: obj.default
     })
@@ -229,6 +238,7 @@ class Field {
    */
   static Time (obj = {}) {
     const field = new this({
+      type: 'time',
       required: obj.required,
       default: obj.default
     })
@@ -244,6 +254,7 @@ class Field {
    */
   static Relationship (obj = {}) {
     const field = new this({
+      type: 'relationship',
       isModel: true,
       required: obj.required,
       target: obj.target,
@@ -264,6 +275,7 @@ class Field {
    */
   static Relationships (obj = {}) {
     const field = new this({
+      type: 'relationships',
       isModel: true,
       isArray: true,
       required: obj.required,

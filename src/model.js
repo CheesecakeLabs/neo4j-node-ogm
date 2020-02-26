@@ -42,11 +42,11 @@ class Model {
       switch (attr.type) {
         case 'hash': break
         case 'relationship':
-          if (value && value._values) data[key] = this.retriveInfo(value)
+          if (value[key]) data[key] = this.retriveInfo(value[key])
           break
         case 'relationships':
-          if (value && value._values) {
-            data[key] = value.map(item => this.retriveInfo(item))
+          if (value[key]) {
+            data[key] = value[key].map(item => this.retriveInfo(item))
           }
           break
         default:

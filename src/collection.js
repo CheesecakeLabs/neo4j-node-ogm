@@ -1,5 +1,5 @@
 class Collection extends Array {
-  toJSON () {
+  getJSON () {
     return this.map(item => item.toJSON())
   }
 

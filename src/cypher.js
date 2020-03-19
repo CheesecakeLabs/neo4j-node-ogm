@@ -25,7 +25,15 @@ class Cypher {
   }
 
   addWhere ({ attr, operator = '=', value }) {
-    const whereString = `${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
+    let whereString
+    switch (operator) {
+      case 'IN':
+        whereString = `${attr} ${operator} ${value}`
+        break
+      default:
+        whereString = `${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
+    }
+
     this.wheres.push(whereString)
   }
 

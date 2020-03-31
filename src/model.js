@@ -7,8 +7,8 @@ class Model {
    * Constructor
    *
    * @param {Object} values
-  */
-  constructor (values = {}, labels = [], attributes = {}) {
+   */
+  constructor(values = {}, labels = [], attributes = {}) {
     this._with = []
     this._values = values
     this._labels = labels
@@ -23,8 +23,8 @@ class Model {
 
   /**
    * Start the retrieve Info based on actual Node
-  */
-  toJSON () {
+   */
+  toJSON() {
     return this.retriveInfo(this)
   }
 
@@ -32,15 +32,16 @@ class Model {
    * Retrieve Info from Node as a JSON, only with clean data
    *
    * @param {Object} model
-  */
-  retriveInfo (model) {
+   */
+  retriveInfo(model) {
     const data = {}
     data.id = model.id
     Object.entries(model._attributes).forEach(([key, attr]) => {
       const value = model._values
 
       switch (attr.type) {
-        case 'hash': break
+        case 'hash':
+          break
         case 'relationship':
           if (value[key]) data[key] = this.retriveInfo(value[key])
           break
@@ -57,15 +58,15 @@ class Model {
     return data
   }
 
-  getAliasName () {
+  getAliasName() {
     return this._labels.join('').toLowerCase()
   }
 
-  getNodeName () {
+  getNodeName() {
     return this._labels.join(':')
   }
 
-  getCypherName (aliasName = false) {
+  getCypherName(aliasName = false) {
     if (aliasName) {
       return aliasName + ':' + this.getNodeName()
     }
@@ -73,7 +74,7 @@ class Model {
     return this.getAliasName() + ':' + this.getNodeName()
   }
 
-  getAttributes () {
+  getAttributes() {
     return Object.entries(this._attributes)
   }
 
@@ -84,7 +85,7 @@ class Model {
    * @param {String} nodeName
    * @param {Boolean} overwriteWith
    */
-  checkWith (level, nodeName, overwriteWith = false) {
+  checkWith(level, nodeName, overwriteWith = false) {
     let ret = false
     // by default the with_related is on this._with
     if (!overwriteWith) overwriteWith = this._with
@@ -98,14 +99,9 @@ class Model {
     return ret
   }
 
-  doMatchs (node, relation, level = 0, onlyRelation = false) {
+  doMatchs(node, relation, level = 0, onlyRelation = false) {
     if (relation) {
-      this.cypher.match(
-        relation.previousNode,
-        relation.previousAlias,
-        relation.relationship,
-        node
-      )
+      this.cypher.match(relation.previousNode, relation.previousAlias, relation.relationship, node)
     } else if (onlyRelation) {
       this.cypher.addReturn(node.getAliasName(), node)
     } else {
@@ -122,7 +118,7 @@ class Model {
             {
               relationship: `:${field.labels.join(':')}`,
               previousNode: node,
-              previousAlias: key
+              previousAlias: key,
             },
             level + 1
           )
@@ -133,7 +129,7 @@ class Model {
     return true
   }
 
-  addMatchs (node, attr) {
+  addMatchs(node, attr) {
     this.cypher.match(node, false, false, false, attr)
   }
 
@@ -146,7 +142,7 @@ class Model {
    * @param {Integer} level
    * @param {Boolean} onlyRelation
    */
-  hydrate (model, dataJSON, level = 0, onlyRelation = false, previous) {
+  hydrate(model, dataJSON, level = 0, onlyRelation = false, previous) {
     if (dataJSON) {
       if (!onlyRelation && !model.id) {
         // create only getter for id
@@ -200,29 +196,27 @@ class Model {
     return model
   }
 
-  async fetch (with_related = []) {
+  async fetch(with_related = []) {
     return this.constructor.findAll({
-      filterAttributes: [
-        { key: `id(${this.getAliasName()})`, value: this.id }
-      ],
+      filterAttributes: [{ key: `id(${this.getAliasName()})`, value: this.id }],
       with_related,
       parent: this,
-      onlyRelation: true
+      onlyRelation: true,
     })
   }
 
-  async delete (detach = false) {
+  async delete(detach = false) {
     this.cypher = new Cypher()
     this.doMatchs(this, false)
     this.cypher.addWhere({
       attr: `id(${this.getAliasName()})`,
-      value: this.id
+      value: this.id,
     })
     const data = await this.cypher.delete(this.getAliasName(), detach)
     return data
   }
 
-  setAttributes (create = true) {
+  setAttributes(create = true) {
     Object.entries(this._attributes).forEach(([key, field]) => {
       const defaultValue = field.hasDefaultValue(this._values[key])
       if (defaultValue) this[key] = defaultValue
@@ -236,7 +230,7 @@ class Model {
     })
   }
 
-  async save () {
+  async save() {
     this.cypher = new Cypher()
     if (this.id === undefined) {
       // create
@@ -252,7 +246,7 @@ class Model {
       // update
       this.cypher.addWhere({
         attr: `id(${this.getAliasName()})`,
-        value: this.id
+        value: this.id,
       })
       this.cypher.isDistinct()
       this.doMatchs(this, false)
@@ -267,13 +261,13 @@ class Model {
   }
 
   /**
-  * Relate nodes
-  *
-  * @param {String} attr
-  * @param {Model} node
-  * @param {JSON} attributes
-  */
-  async relate (attr, node, attributes = {}, create = true) {
+   * Relate nodes
+   *
+   * @param {String} attr
+   * @param {Model} node
+   * @param {JSON} attributes
+   */
+  async relate(attr, node, attributes = {}, create = true) {
     // CLEAN OLD _WITHS TO NOT INTERFERE
     this._with = []
     this.cypher = new Cypher()
@@ -283,11 +277,11 @@ class Model {
     this._with = [[attr]]
     this.cypher.addWhere({
       attr: `id(${this.getAliasName()})`,
-      value: this.id
+      value: this.id,
     })
     this.cypher.addWhere({
       attr: `id(${attr})`,
-      value: node.id
+      value: node.id,
     })
     // ADD THE ATTRIBUTES ON RELATION
     Object.entries(attributes).forEach(([key, value]) => {
@@ -302,46 +296,81 @@ class Model {
   }
 
   /**
-  * Update a relation between the nodes
-  *
-  * @param {String} attr
-  * @param {Model} node
-  * @param {JSON} attributes
-  */
-  async updateRelationship (attr, node, attributes = {}) {
+   * Update a relation between the nodes
+   *
+   * @param {String} attr
+   * @param {Model} node
+   * @param {JSON} attributes
+   */
+  async updateRelationship(attr, node, attributes = {}) {
     return this.relate(attr, node, attributes, false)
   }
 
   /**
-  * Create a relation between the nodes
-  *
-  * @param {String} attr
-  * @param {Model} node
-  * @param {JSON} attributes
-  */
-  async createRelationship (attr, node, attributes = {}) {
+   * Create a relation between the nodes
+   *
+   * @param {String} attr
+   * @param {Model} node
+   * @param {JSON} attributes
+   */
+  async createRelationship(attr, node, attributes = {}) {
     return this.relate(attr, node, attributes, true)
   }
 
-  static async findByID (id, config = {}) {
+  /**
+   * Remove the relations about that attribute
+   *
+   * @param {String} attr
+   */
+  async removeRelationship(attr) {
+    this.cypher = new Cypher()
+    this._with = [[attr]]
+    this.doMatchs(this)
+    this.cypher.addWhere({
+      attr: `id(${this.getAliasName()})`,
+      value: this.id,
+    })
+    return this.cypher.delete(attr)
+  }
+
+  /**
+   * Create a new relation and remove the older
+   *
+   * @param {String} attr
+   * @param {Model} node
+   * @param {JSON} attributes
+   */
+  async removeAndCreateRelationship(attr, node, attributes = {}) {
+    try {
+      await this.removeRelationship(attr)
+      const data = await this.relate(attr, node, attributes, true)
+      return data
+    } catch (e) {
+      throw new Error('new relation is not possible')
+    }
+  }
+
+  static async findByID(id, config = {}) {
     const self = new this()
 
-    config.filterAttributes = [{
-      key: `id(${self.getAliasName()})`,
-      value: id
-    }]
+    config.filterAttributes = [
+      {
+        key: `id(${self.getAliasName()})`,
+        value: parseInt(id, 10),
+      },
+    ]
 
     const data = await this.findAll(config)
 
     return data[0]
   }
 
-  static async findBy (filterAttributes = [], config = {}) {
+  static async findBy(filterAttributes = [], config = {}) {
     config.filterAttributes = filterAttributes
     return this.findAll(config)
   }
 
-  static async findAll (config = {}) {
+  static async findAll(config = {}) {
     let self
     if (!config.parent) {
       self = new this()
@@ -353,16 +382,18 @@ class Model {
     Object.keys(config).forEach(key => {
       config[key] === undefined && delete config[key]
     })
-    config = Object.assign({
-      with_related: [],
-      filterAttributes: [],
-      onlyRelation: false,
-      order_by: [],
-      skip: '',
-      limit: '',
-      optional: true
-    },
-    config)
+    config = Object.assign(
+      {
+        with_related: [],
+        filterAttributes: [],
+        onlyRelation: false,
+        order_by: [],
+        skip: '',
+        limit: '',
+        optional: true,
+      },
+      config
+    )
 
     config.with_related.forEach(item => {
       const w = item.split('__')
@@ -377,12 +408,14 @@ class Model {
     self.doMatchs(self, false, 0, config.onlyRelation)
     // FILTERS
     config.filterAttributes.forEach(({ key, operator, value }) => {
-      const attr = key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
+      const attr =
+        key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
       self.cypher.addWhere({ attr, operator, value })
     })
 
     config.order_by.forEach(([key, direction]) => {
-      const attr = key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
+      const attr =
+        key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
       self.cypher.addOrderBy(attr, direction || 'ASC')
     })
 

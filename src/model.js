@@ -325,12 +325,13 @@ class Model {
   async removeRelationship(attr) {
     this.cypher = new Cypher()
     this._with = [[attr]]
+    this.cypher.optional = false
     this.doMatchs(this)
     this.cypher.addWhere({
       attr: `id(${this.getAliasName()})`,
       value: this.id,
     })
-    return this.cypher.delete(attr)
+    return this.cypher.delete(`${this.getAliasName()}_${attr}`)
   }
 
   /**

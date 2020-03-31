@@ -340,7 +340,7 @@ class Model {
    * @param {Model} node
    * @param {JSON} attributes
    */
-  async removeAndCreateRelationship(attr, node, attributes = {}) {
+  async recreateRelationship(attr, node, attributes = {}) {
     try {
       await this.removeRelationship(attr)
       const data = await this.relate(attr, node, attributes, true)

@@ -2,19 +2,17 @@ import { getConnection } from './driver'
 
 const database = getConnection()
 class Cypher {
-  constructor (stmt = '') {
+  constructor(stmt = '') {
     this.clean(stmt)
   }
 
-  clean (stmt = '') {
+  clean(stmt = '') {
     this.nodes = []
     this.matchs = []
     this.wheres = []
-    this.whereString = ''
     this.sets = []
     this.setString = ''
     this.orders = []
-    this.orderString = ''
     this.return = {}
     this.returnString = ''
     this.distinct = ''
@@ -24,7 +22,7 @@ class Cypher {
     this.optional = true
   }
 
-  addWhere ({ attr, operator = '=', value }) {
+  addWhere({ attr, operator = '=', value }) {
     let whereString
     switch (operator) {
       case 'IN':
@@ -37,27 +35,46 @@ class Cypher {
     this.wheres.push(whereString)
   }
 
-  writeWhere () {
+  writeWhere() {
     if (this.wheres.length > 0) {
-      this.whereString = ` WITH ${this.nodes.join(', ')}`
-      this.whereString = ` WHERE ${this.wheres.join(' AND ')}`
+      // this.whereString = ` WITH ${this.nodes.join(', ')}`
+      const whereString = ` WHERE ${this.wheres.join(' AND ')}`
+      this.wheres = []
+      return whereString
     }
   }
 
-  addReturn (key, value) {
+  addReturn(key, value) {
     this.return[key] = value
   }
 
-  match (node, previousAlias = false, relationship = false, targetModel = false, dontPutOnReturn = false) {
+  match(
+    node,
+    previousAlias = false,
+    relationship = false,
+    targetModel = false,
+    dontPutOnReturn = false
+  ) {
     if (targetModel) {
       const relationName = `${node.getAliasName()}_${previousAlias}${relationship}`
 
       let filterRelationship = ''
       if (targetModel.filter_relationship) {
-        filterRelationship = '{' + Object.entries(targetModel.filter_relationship).map(([key, value]) => `${key}:'${value}'`).join(', ') + '}'
+        filterRelationship =
+          '{' +
+          Object.entries(targetModel.filter_relationship)
+            .map(([key, value]) => `${key}:'${value}'`)
+            .join(', ') +
+          '}'
       }
 
-      this.matchs.push(`${this.optional ? 'OPTIONAL' : ''} MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(previousAlias)})`)
+      this.matchs.push(
+        `${
+          this.optional ? 'OPTIONAL' : ''
+        } MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(
+          previousAlias
+        )})`
+      )
       this.nodes.push(previousAlias)
     } else {
       if (!dontPutOnReturn) {
@@ -70,33 +87,35 @@ class Cypher {
     }
   }
 
-  addSet (attr, value) {
+  addSet(attr, value) {
     if (value) {
       this.sets.push(`${attr} = '${value}'`)
     }
   }
 
-  writeSets (CONCAT = ' AND ') {
+  writeSets(CONCAT = ' AND ') {
     if (this.sets.length > 0) {
       this.setString = `SET ${this.sets.join(CONCAT)}`
     }
   }
 
-  addOrderBy (attr, direction) {
+  addOrderBy(attr, direction) {
     this.orders.push(`${attr} ${direction}`)
   }
 
-  writeOrderBy (CONCAT = ' , ') {
+  writeOrderBy(CONCAT = ' , ') {
     if (this.orders.length > 0) {
-      this.orderString = `ORDER BY ${this.orders.join(CONCAT)}`
+      return `ORDER BY ${this.orders.join(CONCAT)}`
     }
+
+    return ''
   }
 
-  isDistinct (bool = true) {
+  isDistinct(bool = true) {
     this.distinct = bool ? 'DISTINCT' : ''
   }
 
-  writeReturn (nodes, isFind = true) {
+  writeReturn(nodes, isFind = true) {
     this.isFind = isFind
     for (const [alias, model] of Object.entries(nodes)) {
       this.actualModel = model
@@ -104,7 +123,7 @@ class Cypher {
     }
   }
 
-  modelReturn (alias, model, attributeID, level = 0, wasCollected = false, previous = false) {
+  modelReturn(alias, model, attributeID, level = 0, wasCollected = false, previous = false) {
     this.returnString += `${alias} {`
 
     const attrs = []
@@ -119,7 +138,14 @@ class Cypher {
           if (field.isModel && level < 1) {
             willCollect = true
           }
-          this.modelReturn(`${attr}:${willCollect ? 'collect(' + this.distinct + ' ' + attr : attr}`, new field.target(), attr, level + 1, willCollect, { field, model })
+          this.modelReturn(
+            `${attr}:${willCollect ? 'collect(' + this.distinct + ' ' + attr : attr}`,
+            new field.target(),
+            attr,
+            level + 1,
+            willCollect,
+            { field, model }
+          )
         }
       } else {
         if (!model.parent) {
@@ -150,7 +176,7 @@ class Cypher {
     }
   }
 
-  async create (nodeAlias) {
+  async create(nodeAlias) {
     this.writeSets(' , ')
     this.writeReturn(this.return)
     const stmt = `CREATE (${nodeAlias}) ${this.whereString} ${this.setString} RETURN ${this.returnString}`
@@ -170,11 +196,13 @@ class Cypher {
     return result
   }
 
-  async update () {
+  async update() {
     this.writeWhere()
     this.writeSets(' , ')
     this.writeReturn(this.return)
-    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${this.returnString}`
+    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${
+      this.returnString
+    }`
     const session = await database.session()
 
     let result
@@ -190,10 +218,12 @@ class Cypher {
     return result
   }
 
-  async delete (alias, detach = false) {
+  async delete(alias, detach = false) {
     this.writeWhere()
 
-    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${detach ? 'DETACH' : ''} DELETE ${alias}`
+    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${
+      detach ? 'DETACH' : ''
+    } DELETE ${alias}`
     // console.log(stmt)
     const session = await database.session()
 
@@ -208,13 +238,15 @@ class Cypher {
     return true
   }
 
-  async relate (node1, relation, node2, create = true) {
+  async relate(node1, relation, node2, create = true) {
     this.writeWhere()
     this.writeReturn(this.return)
     this.writeSets(' , ')
     const stmt = `${this.matchs.join(' ')} ${this.whereString}
                   ${create ? 'CREATE' : 'MATCH'}
-                  (${node1.getAliasName()})-[${node1.getAliasName()}_${relation.attr}:${relation.getLabelName()}]${create ? '->' : '-'}(${relation.attr})
+                  (${node1.getAliasName()})-[${node1.getAliasName()}_${
+      relation.attr
+    }:${relation.getLabelName()}]${create ? '->' : '-'}(${relation.attr})
                   ${this.setString} RETURN ${this.returnString}`
 
     const session = database.session()
@@ -229,13 +261,13 @@ class Cypher {
     }
   }
 
-  async find () {
-    this.writeWhere()
+  async find() {
     this.writeReturn(this.return)
-    this.writeOrderBy()
-    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString}
+    const stmt = `${this.matchs.join(' ')} ${this.setString}
                   RETURN ${this.distinct} ${this.returnString}
-                  ${this.orderString} ${this.skip ? `SKIP ${this.skip}` : ''} ${this.limit ? `LIMIT ${this.limit}` : ''}`
+                  ${this.writeOrderBy()} ${this.skip ? `SKIP ${this.skip}` : ''} ${
+      this.limit ? `LIMIT ${this.limit}` : ''
+    }`
 
     const session = database.session()
     // console.log(stmt)

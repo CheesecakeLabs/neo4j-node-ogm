@@ -13,6 +13,7 @@ class Model {
     this._values = values
     this._labels = labels
     this._attributes = attributes
+    this.filterAttributes = []
     Object.entries(attributes).forEach(([key, field]) => {
       createGetterAndSetter(this, key, field.set, field.get)
     })
@@ -99,6 +100,18 @@ class Model {
     return ret
   }
 
+  writeFilter(level = undefined) {
+    // FILTERS WITH ORDER
+    this.filterAttributes
+      .filter(item => item.order === level)
+      .forEach(({ key, operator, value }) => {
+        const attr =
+          key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : this.getAliasName() + '.' + key
+        this.cypher.addWhere({ attr, operator, value })
+      })
+    this.cypher.matchs.push(this.cypher.writeWhere())
+  }
+
   doMatchs(node, relation, level = 0, onlyRelation = false) {
     if (relation) {
       this.cypher.match(relation.previousNode, relation.previousAlias, relation.relationship, node)
@@ -107,6 +120,9 @@ class Model {
     } else {
       this.cypher.match(node)
     }
+
+    this.writeFilter(level)
+
     Object.keys(node._attributes).forEach(key => {
       const field = node._attributes[key]
       if (field.isModel) {
@@ -358,6 +374,7 @@ class Model {
       {
         key: `id(${self.getAliasName()})`,
         value: parseInt(id, 10),
+        order: 0,
       },
     ]
 
@@ -406,13 +423,11 @@ class Model {
     self.cypher.optional = config.optional
     self.cypher.skip = config.skip
     self.cypher.limit = config.limit
+    self.filterAttributes = config.filterAttributes
     self.doMatchs(self, false, 0, config.onlyRelation)
-    // FILTERS
-    config.filterAttributes.forEach(({ key, operator, value }) => {
-      const attr =
-        key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
-      self.cypher.addWhere({ attr, operator, value })
-    })
+
+    // Filters not ordered
+    self.writeFilter()
 
     config.order_by.forEach(([key, direction]) => {
       const attr =

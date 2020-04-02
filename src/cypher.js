@@ -42,6 +42,8 @@ class Cypher {
       this.wheres = []
       return whereString
     }
+
+    return ''
   }
 
   addReturn(key, value) {

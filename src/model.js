@@ -299,6 +299,10 @@ class Model {
     ]
     this.doMatchs(this)
     this.addMatchs(node, attr)
+
+    // Filters not ordered
+    this.writeFilter()
+
     // ADD TO _WITH TO RETURN THE RELATION
     this._with = [[attr]]
     // ADD THE ATTRIBUTES ON RELATION

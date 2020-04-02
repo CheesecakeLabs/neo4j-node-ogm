@@ -181,7 +181,7 @@ class Cypher {
   async create(nodeAlias) {
     this.writeSets(' , ')
     this.writeReturn(this.return)
-    const stmt = `CREATE (${nodeAlias}) ${this.whereString} ${this.setString} RETURN ${this.returnString}`
+    const stmt = `CREATE (${nodeAlias}) ${this.setString} RETURN ${this.returnString}`
     // console.log(stmt)
     const session = await database.session()
 
@@ -202,9 +202,7 @@ class Cypher {
     this.writeWhere()
     this.writeSets(' , ')
     this.writeReturn(this.return)
-    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${this.setString} RETURN ${
-      this.returnString
-    }`
+    const stmt = `${this.matchs.join(' ')} ${this.setString} RETURN ${this.returnString}`
     const session = await database.session()
 
     let result
@@ -223,9 +221,7 @@ class Cypher {
   async delete(alias, detach = false) {
     this.writeWhere()
 
-    const stmt = `${this.matchs.join(' ')} ${this.whereString} ${
-      detach ? 'DETACH' : ''
-    } DELETE ${alias}`
+    const stmt = `${this.matchs.join(' ')} ${detach ? 'DETACH' : ''} DELETE ${alias}`
     // console.log(stmt)
     const session = await database.session()
 
@@ -244,7 +240,7 @@ class Cypher {
     this.writeWhere()
     this.writeReturn(this.return)
     this.writeSets(' , ')
-    const stmt = `${this.matchs.join(' ')} ${this.whereString}
+    const stmt = `${this.matchs.join(' ')}
                   ${create ? 'CREATE' : 'MATCH'}
                   (${node1.getAliasName()})-[${node1.getAliasName()}_${
       relation.attr

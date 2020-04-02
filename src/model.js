@@ -287,17 +287,16 @@ class Model {
     // CLEAN OLD _WITHS TO NOT INTERFERE
     this._with = []
     this.cypher = new Cypher()
-    this.filterAttributes([
+    this.filterAttributes = [
       {
         key: `id(${this.getAliasName()})`,
         value: this.id,
-        order: 0,
       },
       {
         key: `id(${attr})`,
         value: node.id,
       },
-    ])
+    ]
     this.doMatchs(this)
     this.addMatchs(node, attr)
     // ADD TO _WITH TO RETURN THE RELATION

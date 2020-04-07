@@ -1,5 +1,5 @@
 import { assert, expect } from 'chai'
-import { getConnection } from '../build/driver'
+import { getConnection } from '../build'
 
 describe('Neo4j Driver Connection', () => {
   describe('::constructor', () => {

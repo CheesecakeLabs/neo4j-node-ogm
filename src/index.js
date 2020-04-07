@@ -1,9 +1,8 @@
 import { Model } from './model'
 import { Field } from './field'
-import { getConnection } from './driver'
+import { Collection } from './collection'
 
-export {
-  Model,
-  Field,
-  getConnection
-}
+import { getConnection } from './driver'
+import 'regenerator-runtime/runtime.js'
+
+export { Model, Field, getConnection, Collection }

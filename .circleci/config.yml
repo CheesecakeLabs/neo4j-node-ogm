@@ -3,13 +3,13 @@ version: 2
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: circleci/node:12.8.0
+    - image: circleci/node:12.16.1
 
 jobs:
   test:
     working_directory: ~/repo
     docker:
-      - image: circleci/node:12.8.0
+      - image: circleci/node:12.16.1
       - image: neo4j:3.5.6
         environment:
           NEO4J_AUTH: neo4j/letmein
@@ -18,7 +18,7 @@ jobs:
 
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-{{ checksum "package.json" }}
 
       - run: npm install
       - run: npm run test

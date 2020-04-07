@@ -223,11 +223,15 @@ class Model {
 
   async delete(detach = false) {
     this.cypher = new Cypher()
+    this.filterAttributes = [
+      {
+        key: `id(${this.getAliasName()})`,
+        value: this.id,
+      },
+    ]
     this.doMatchs(this, false)
-    this.cypher.addWhere({
-      attr: `id(${this.getAliasName()})`,
-      value: this.id,
-    })
+    this.writeFilter()
+
     const data = await this.cypher.delete(this.getAliasName(), detach)
     return data
   }

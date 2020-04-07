@@ -344,15 +344,44 @@ class Model {
    *
    * @param {String} attr
    */
-  async removeRelationship(attr) {
+  async removeAllRelationships(attr) {
     this.cypher = new Cypher()
     this._with = [[attr]]
     this.cypher.optional = false
+    this.filterAttributes = [
+      {
+        attr: `id(${this.getAliasName()})`,
+        value: this.id,
+      },
+    ]
     this.doMatchs(this)
-    this.cypher.addWhere({
-      attr: `id(${this.getAliasName()})`,
-      value: this.id,
-    })
+    return this.cypher.delete(`${this.getAliasName()}_${attr}`)
+  }
+
+  /**
+   * Remove the one single relationship based on other node
+   *
+   * @param {String} attr
+   */
+  async removeRelationship(attr, node) {
+    this.cypher = new Cypher()
+    this._with = [[attr]]
+    this.cypher.optional = false
+    this.filterAttributes = [
+      {
+        key: `id(${this.getAliasName()})`,
+        value: this.id,
+        order: 0,
+      },
+      {
+        key: `id(${attr})`,
+        value: node.id,
+      },
+    ]
+
+    this.doMatchs(this)
+    this.writeFilter()
+
     return this.cypher.delete(`${this.getAliasName()}_${attr}`)
   }
 

@@ -219,8 +219,6 @@ class Cypher {
   }
 
   async delete(alias, detach = false) {
-    this.writeWhere()
-
     const stmt = `${this.matchs.join(' ')} ${detach ? 'DETACH' : ''} DELETE ${alias}`
     // console.log(stmt)
     const session = await database.session()

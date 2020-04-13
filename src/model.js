@@ -13,6 +13,7 @@ class Model {
     this._values = values
     this._labels = labels
     this._attributes = attributes
+    this._alias = null
     this.filterAttributes = []
     Object.entries(attributes).forEach(([key, field]) => {
       createGetterAndSetter(this, key, field.set, field.get)
@@ -60,7 +61,7 @@ class Model {
   }
 
   getAliasName() {
-    return this._labels.join('').toLowerCase()
+    return this._alias ?? this._labels.join('').toLowerCase()
   }
 
   getNodeName() {
@@ -129,6 +130,7 @@ class Model {
         if (this.checkWith(level, key)) {
           const newNode = new field.target()
           newNode.filter_relationship = field.filter_relationship
+          newNode._alias = key
           this.doMatchs(
             newNode,
             {

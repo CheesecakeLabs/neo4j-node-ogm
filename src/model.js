@@ -204,7 +204,7 @@ class Model {
           // create getter and setter for that attribute inside _values
           createGetterAndSetter(model, key, field.set, field.get, field.checkHash)
           // just a value of the model
-          model._values[key] = dataJSON[key]
+          if (dataJSON[key]) model._values[key] = dataJSON[key]
         }
       })
     }
@@ -399,6 +399,11 @@ class Model {
   async recreateRelationship(attr, node, attributes = {}) {
     try {
       await this.removeRelationship(attr)
+    } catch (e) {
+      // nothing
+    }
+
+    try {
       const data = await this.relate(attr, node, attributes, true)
       return data
     } catch (e) {

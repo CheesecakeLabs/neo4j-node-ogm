@@ -216,7 +216,7 @@ class Model {
 
   async fetch(with_related = []) {
     return this.constructor.findAll({
-      filterAttributes: [{ key: `id(${this.getAliasName()})`, value: this.id }],
+      filterAttributes: [{ key: `id(${this.getAliasName()})`, value: this.id, order: 0 }],
       with_related,
       parent: this,
       onlyRelation: true,

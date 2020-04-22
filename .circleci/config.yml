@@ -1,10 +1,10 @@
 version: 2
-
+​
 defaults: &defaults
   working_directory: ~/repo
   docker:
     - image: circleci/node:12.16.1
-
+​
 jobs:
   test:
     working_directory: ~/repo
@@ -15,19 +15,19 @@ jobs:
           NEO4J_AUTH: neo4j/letmein
     steps:
       - checkout
-
+​
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
-
+​
       - run: npm install
       - run: npm run test
-
+​
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-
+​
       - persist_to_workspace:
           root: ~/repo
           paths: .
@@ -43,20 +43,15 @@ jobs:
       - run:
           name: Publish package
           command: npm publish
-
+​
 workflows:
   version: 2
-  npm-deploy:
+  untagged-build:
     jobs:
-      - test:
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+      - test
+  tagged-build:
+    jobs:
       - deploy:
-          requires:
-            - test
           filters:
             tags:
               only: /^v.*/

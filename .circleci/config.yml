@@ -45,11 +45,11 @@ workflows:
   tagged-build:
     jobs:
       - test:
-        filters:
-          tags:
-            only: /^v.*/
-          branches:
-            ignore: /.*/
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
       - deploy:
           requires:
             - test

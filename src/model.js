@@ -113,11 +113,9 @@ class Model {
     this.cypher.matchs.push(this.cypher.writeWhere())
   }
 
-  doMatchs(node, relation, level = 0, onlyRelation = false) {
+  doMatchs(node, relation, level = 0) {
     if (relation) {
       this.cypher.match(relation.previousNode, relation.previousAlias, relation.relationship, node)
-    } else if (onlyRelation) {
-      this.cypher.addReturn(node.getAliasName(), node)
     } else {
       this.cypher.match(node)
     }
@@ -219,7 +217,6 @@ class Model {
       filterAttributes: [{ key: `id(${this.getAliasName()})`, value: this.id, order: 0 }],
       with_related,
       parent: this,
-      onlyRelation: true,
     })
   }
 
@@ -470,7 +467,7 @@ class Model {
     self.cypher.skip = config.skip
     self.cypher.limit = config.limit
     self.filterAttributes = config.filterAttributes
-    self.doMatchs(self, false, 0, config.onlyRelation)
+    self.doMatchs(self, false, 0)
 
     // Filters not ordered
     self.writeFilter()

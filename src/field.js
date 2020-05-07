@@ -190,7 +190,9 @@ class Field {
   static Boolean (obj = {}) {
     const field = new this({
       type: 'boolean',
-      default: obj.default
+      default: obj.default,
+      set: value => (value === true || value === 'true' ? 'true' : 'false'),
+      get: value => (value === true || value === 'true' ? true : false),
     })
     return field
   }

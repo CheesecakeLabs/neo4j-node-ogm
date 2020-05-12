@@ -75,6 +75,7 @@ class Cypher {
         this.matchs.push(`MATCH (${dontPutOnReturn}:${node.getNodeName()})`)
         this.nodes.push(node.getAliasName())
         node._alias = dontPutOnReturn
+        node._with = []
         this.addReturn(dontPutOnReturn, node)
       }
     }
@@ -152,7 +153,7 @@ class Cypher {
     // LOOP ON MODEL ATTRIBUTES
     for (const [attr, field] of Object.entries(model._attributes)) {
       if (field.isModel) {
-        if (checkWith(level, attr, this.actualModel._with) && this.isFind) {
+        if (checkWith(level, attr, this.actualModel._with)) {
           let relationString = `${model.getAliasName()}_${attr} {`
           const relAttrs = []
           for (const [relAttr] of Object.entries(field.attributes)) {
@@ -160,7 +161,6 @@ class Cypher {
           }
 
           relationString += `${relAttrs.join(', ')} }`
-
           this.returnStrings.push(relationString)
         }
       } else {

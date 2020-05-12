@@ -190,6 +190,8 @@ await users.deleteAll()
 - toJSON() - return a Node's Collection as JSON
 - first() - return the first Node or undefined
 - length() - return a Integer with the size of Collection
+- map(function)
+- some(function)
 
 **Collection async functions:**
 

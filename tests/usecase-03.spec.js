@@ -15,7 +15,7 @@ describe('Use Cases - 03', () => {
     it('should select the second one', done => {
       User.findAll({ skip: 1, limit: 1, order_by: [{ key: 'email' }] })
         .then(users => {
-          expect(users.toValues()[0].email).to.be.equal('emailupdated@domain.com')
+          expect(users.first().email).to.be.equal('emailupdated@domain.com')
           expect(users.toValues()).to.have.lengthOf(1)
         })
         .then(() => done(), done)

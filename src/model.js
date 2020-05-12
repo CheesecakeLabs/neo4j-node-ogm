@@ -342,7 +342,7 @@ class Model {
     ].concat(config.filter_attributes)
 
     const data = await this.findAll(config)
-    return data[0]
+    return data.first()
   }
 
   static async findBy(filter_attributes = [], config = {}) {

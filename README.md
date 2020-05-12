@@ -184,6 +184,17 @@ await users.deleteAll()
 
 ## API
 
+**Collection functions:**
+
+- toValues() - return a Node's Collection as Array
+- toJSON() - return a Node's Collection as JSON
+- first() - return the first Node or undefined
+- length() - return a Integer with the size of Collection
+
+**Collection async functions:**
+
+- deleteAll() - return an Array of true/false
+
 **Model static async functions:**
 
 - findAll({ with_related, filter_attributes, order_by, skip, limit }) - return a Node's Collection

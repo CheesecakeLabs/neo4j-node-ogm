@@ -32,7 +32,7 @@ describe('Use Cases - 02', () => {
         order_by: [{ key: 'email' }],
       })
         .then(users => {
-          expect(users.toValues()[0].email).to.be.equal('email@domain.com')
+          expect(users.first().email).to.be.equal('email@domain.com')
         })
         .then(() => done(), done)
     })
@@ -42,7 +42,7 @@ describe('Use Cases - 02', () => {
         order_by: [{ key: 'email', direction: 'DESC' }],
       })
         .then(users => {
-          expect(users.toValues()[0].email).to.be.equal('emailupdated@domain.com')
+          expect(users.first().email).to.be.equal('emailupdated@domain.com')
         })
         .then(() => done(), done)
     })

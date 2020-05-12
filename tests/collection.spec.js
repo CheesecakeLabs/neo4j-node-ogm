@@ -3,7 +3,6 @@ import { assert, expect } from 'chai'
 import { Collection } from '../build'
 
 describe('Collection', () => {
-  const values = [1, 2, 3, 4]
   const collection = new Collection()
 
   describe('::constructor', () => {
@@ -12,12 +11,7 @@ describe('Collection', () => {
     })
 
     it('should have an empty array', () => {
-      expect(collection).to.deep.equal([])
-    })
-
-    it('should have values inside', () => {
-      collection.pushAll(values)
-      expect(collection).to.deep.equal(values)
+      expect(collection.toJSON()).to.deep.equal([])
     })
   })
 })

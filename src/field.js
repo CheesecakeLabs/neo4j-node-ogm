@@ -7,29 +7,31 @@ class Field {
    *
    * @param {Object} config
    */
-  constructor (config = {}) {
+  constructor(config = {}) {
     // remove undefined configs to be overwrite by default config
     Object.keys(config).forEach(key => {
       config[key] === undefined && delete config[key]
     })
     // create default configs
-    config = Object.assign({
-      type: null,
-      isModel: false,
-      isArray: false,
-      required: false,
-      valid: false,
-      filter_relationship: false,
-      target: false,
-      default: false,
-      min_length: false,
-      max_length: false,
-      attributes: false,
-      labels: [],
-      set: (value) => value,
-      get: (value) => value
-    },
-    config)
+    config = Object.assign(
+      {
+        type: null,
+        isModel: false,
+        isArray: false,
+        required: false,
+        valid: false,
+        filter_relationship: false,
+        target: false,
+        default: false,
+        min_length: false,
+        max_length: false,
+        attributes: false,
+        labels: [],
+        set: value => value,
+        get: value => value,
+      },
+      config
+    )
 
     // put config on this
     Object.assign(this, config)
@@ -40,7 +42,7 @@ class Field {
    *
    * @return {String}
    */
-  getLabelName () {
+  getLabelName() {
     return this.labels.join(':').toUpperCase()
   }
 
@@ -49,9 +51,9 @@ class Field {
    *
    * @param {String} value
    */
-  hasDefaultValue (value) {
+  hasDefaultValue(value) {
     if (!value && this.default) {
-      return (this.default instanceof Function) ? this.default() : this.default
+      return this.default instanceof Function ? this.default() : this.default
     }
 
     return false
@@ -63,12 +65,9 @@ class Field {
    * @param {String} key
    * @param {String} value
    */
-  checkValidation (key, value) {
+  checkValidation(key, value) {
     // valid
-    if (
-      (this.required && this.valid && !this.valid.includes(value)) ||
-      (value && this.valid && !this.valid.includes(value))
-    ) {
+    if ((this.required && this.valid && !this.valid.includes(value)) || (value && this.valid && !this.valid.includes(value))) {
       throw new Error(`Field: ${key} is not a valid option ${JSON.stringify(this.valid)}`)
     }
     // max_length
@@ -94,7 +93,7 @@ class Field {
    *
    * @return {Field}
    */
-  static String (obj = {}) {
+  static String(obj = {}) {
     const field = new this({
       type: 'string',
       set: obj.set,
@@ -103,7 +102,7 @@ class Field {
       min_length: obj.min_length,
       max_length: obj.max_length,
       default: obj.default,
-      valid: obj.valid
+      valid: obj.valid,
     })
     return field
   }
@@ -115,13 +114,13 @@ class Field {
    *
    * @return {Field}
    */
-  static Integer (obj = {}) {
+  static Integer(obj = {}) {
     const field = new this({
       type: 'integer',
       set: obj.set,
       get: obj.get,
       required: obj.required,
-      default: obj.default
+      default: obj.default,
     })
     return field
   }
@@ -133,13 +132,13 @@ class Field {
    *
    * @return {Field}
    */
-  static Float (obj = {}) {
+  static Float(obj = {}) {
     const field = new this({
       type: 'float',
       set: obj.set,
       get: obj.get,
       required: obj.required,
-      default: obj.default
+      default: obj.default,
     })
     return field
   }
@@ -151,13 +150,13 @@ class Field {
    *
    * @return {Field}
    */
-  static Hash (obj = {}) {
+  static Hash(obj = {}) {
     const salt = bcrypt.genSaltSync(10)
     const field = new this({
       type: 'hash',
       required: obj.required,
-      set: (value) => bcrypt.hashSync(`${value}`, salt),
-      checkHash: (value, saved) => bcrypt.compareSync(`${value}`, `${saved}`)
+      set: value => bcrypt.hashSync(`${value}`, salt),
+      checkHash: (value, saved) => bcrypt.compareSync(`${value}`, `${saved}`),
     })
     return field
   }
@@ -169,13 +168,13 @@ class Field {
    *
    * @return {Field}
    */
-  static JSON (obj = {}) {
+  static JSON(obj = {}) {
     const field = new this({
       type: 'json',
       required: obj.required,
       default: obj.default,
-      set: (value) => JSON.stringify(value),
-      get: (value) => JSON.parse(value)
+      set: value => JSON.stringify(value),
+      get: value => JSON.parse(value),
     })
     return field
   }
@@ -187,10 +186,12 @@ class Field {
    *
    * @return {Field}
    */
-  static Boolean (obj = {}) {
+  static Boolean(obj = {}) {
     const field = new this({
       type: 'boolean',
-      default: obj.default
+      default: obj.default,
+      set: value => (value === true || value === 'true' ? 'true' : 'false'),
+      get: value => (value === true || value === 'true' ? true : false),
     })
     return field
   }
@@ -202,13 +203,13 @@ class Field {
    *
    * @return {Field}
    */
-  static DateTime (obj = {}) {
+  static DateTime(obj = {}) {
     const field = new this({
       type: 'datetime',
       required: obj.required,
       default: obj.default,
-      set: (objDate) => objDate.toISOString(),
-      get: (value) => parseISOString(value)
+      set: objDate => objDate.toISOString(),
+      get: value => parseISOString(value),
     })
     return field
   }
@@ -220,11 +221,11 @@ class Field {
    *
    * @return {Field}
    */
-  static Date (obj = {}) {
+  static Date(obj = {}) {
     const field = new this({
       type: 'date',
       required: obj.required,
-      default: obj.default
+      default: obj.default,
     })
     return field
   }
@@ -236,11 +237,11 @@ class Field {
    *
    * @return {Field}
    */
-  static Time (obj = {}) {
+  static Time(obj = {}) {
     const field = new this({
       type: 'time',
       required: obj.required,
-      default: obj.default
+      default: obj.default,
     })
     return field
   }
@@ -252,7 +253,7 @@ class Field {
    *
    * @return {Field}
    */
-  static Relationship (obj = {}) {
+  static Relationship(obj = {}) {
     const field = new this({
       type: 'relationship',
       isModel: true,
@@ -261,7 +262,7 @@ class Field {
       labels: obj.labels,
       filter_relationship: obj.filter_relationship,
       filter_node: obj.filter_node,
-      attributes: obj.attributes
+      attributes: obj.attributes,
     })
     return field
   }
@@ -273,7 +274,7 @@ class Field {
    *
    * @return {Field}
    */
-  static Relationships (obj = {}) {
+  static Relationships(obj = {}) {
     const field = new this({
       type: 'relationships',
       isModel: true,
@@ -283,12 +284,10 @@ class Field {
       labels: obj.labels,
       filter_relationship: obj.filter_relationship,
       filter_node: obj.filter_node,
-      attributes: obj.attributes
+      attributes: obj.attributes,
     })
     return field
   }
 }
 
-export {
-  Field
-}
+export { Field }

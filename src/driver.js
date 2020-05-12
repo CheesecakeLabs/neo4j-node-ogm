@@ -13,13 +13,7 @@ const getConnection = () => {
   }
 
   // get info from env
-  const {
-    NEO4J_PROTOCOL,
-    NEO4J_HOST,
-    NEO4J_USERNAME,
-    NEO4J_PASSWORD,
-    NEO4J_PORT
-  } = process.env
+  const { NEO4J_PROTOCOL, NEO4J_HOST, NEO4J_USERNAME, NEO4J_PASSWORD, NEO4J_PORT } = process.env
 
   // create instance
   instance = neo4j.driver(

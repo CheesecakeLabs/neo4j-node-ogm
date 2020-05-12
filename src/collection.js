@@ -1,31 +1,22 @@
-class Collection extends Array {
-  getJSON () {
-    return this.map(item => item.toJSON())
+class Collection extends Object {
+  toJSON() {
+    return Object.values(this).map(item => item.toJSON())
   }
 
-  async deleteAll (detach = false) {
-    return Promise.all(this.map(item => item.delete(detach)))
+  toValues() {
+    return Object.values(this)
   }
 
-  async asyncForEach (callback) {
-    for (let index = 0; index < this.length; index++) {
-      await callback(this[index], index)
-    }
+  async deleteAll(detach = false) {
+    return Promise.all(Object.values(this).map(item => item.delete(detach)))
   }
 
-  async relate (attr, node, attributes) {
-    this.forEach(item => {
-      item.relate(attr, node, attributes)
-    })
-  }
-
-  pushAll (values) {
-    values.forEach(item => {
-      this.push(item)
-    })
-  }
+  // TODO: bulk relate
+  // async relate(attr, node, attributes) {
+  //   this.forEach(item => {
+  //     item.relate(attr, node, attributes)
+  //   })
+  // }
 }
 
-export {
-  Collection
-}
+export { Collection }

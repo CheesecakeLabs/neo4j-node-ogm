@@ -1,6 +1,7 @@
 import { Cypher } from './cypher'
 import { Collection } from './collection'
-import { createOnlyGetter, createGetterAndSetter, convertID } from './utils'
+import { createGetterAndSetter, convertID } from './utils'
+import { hydrate, checkWith, setWith } from './hydrate'
 
 class Model {
   /**
@@ -14,7 +15,7 @@ class Model {
     this._labels = labels
     this._attributes = attributes
     this._alias = null
-    this.filterAttributes = []
+    this.filter_attributes = []
     Object.entries(attributes).forEach(([key, field]) => {
       createGetterAndSetter(this, key, field.set, field.get)
     })
@@ -35,21 +36,27 @@ class Model {
    *
    * @param {Object} model
    */
-  retriveInfo(model) {
+  retriveInfo(model, previous) {
     const data = {}
     data.id = model.id
-    Object.entries(model._attributes).forEach(([key, attr]) => {
-      const value = model._values
 
-      switch (attr.type) {
+    //attributes of relations
+    if (previous) {
+      for (const [relKey] of Object.entries(previous.attributes)) {
+        if (model._values[relKey]) data[relKey] = model._values[relKey]
+      }
+    }
+
+    Object.entries(model._attributes).forEach(([key, field]) => {
+      switch (field.type) {
         case 'hash':
           break
         case 'relationship':
-          if (value[key]) data[key] = this.retriveInfo(value[key])
+          if (model._values[key]) data[key] = this.retriveInfo(model._values[key], field)
           break
         case 'relationships':
-          if (value[key]) {
-            data[key] = value[key].map(item => this.retriveInfo(item))
+          if (model._values[key]) {
+            data[key] = Object.values(model._values[key]).map(item => this.retriveInfo(item, field))
           }
           break
         default:
@@ -80,37 +87,21 @@ class Model {
     return Object.entries(this._attributes)
   }
 
-  /**
-   * Check the wih_related if have permission at determined level
-   *
-   * @param {Integer} level
-   * @param {String} nodeName
-   * @param {Boolean} overwriteWith
-   */
-  checkWith(level, nodeName, overwriteWith = false) {
-    let ret = false
-    // by default the with_related is on this._with
-    if (!overwriteWith) overwriteWith = this._with
-    overwriteWith.forEach(item => {
-      // found the attr named as model attribute
-      // console.log('checking', item[level], nodeName)
-      if (item[level] === nodeName) {
-        ret = true
-      }
-    })
-    return ret
-  }
-
-  writeFilter(level = undefined) {
-    // FILTERS WITH ORDER
-    this.filterAttributes
-      .filter(item => item.order === level)
-      .forEach(({ key, operator, value }) => {
-        const attr =
-          key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : this.getAliasName() + '.' + key
+  writeFilter(forNode, relationAlias = undefined) {
+    // FILTERS WITH LOCATION
+    this.filter_attributes
+      .filter(item => item.for === forNode || item.for === relationAlias)
+      .forEach(({ attr, operator, value }) => {
         this.cypher.addWhere({ attr, operator, value })
       })
     this.cypher.matchs.push(this.cypher.writeWhere())
+  }
+
+  writeOrderBy() {
+    // FILTERS WITH LOCATION
+    this.order_by.forEach(({ attr, direction }) => {
+      this.cypher.addOrderBy(attr, direction)
+    })
   }
 
   doMatchs(node, relation, level = 0) {
@@ -120,12 +111,12 @@ class Model {
       this.cypher.match(node)
     }
 
-    this.writeFilter(level)
+    this.writeFilter(node.getAliasName(), `${relation?.previousNode?.getAliasName()}_${relation?.previousAlias}`)
 
     Object.keys(node._attributes).forEach(key => {
       const field = node._attributes[key]
       if (field.isModel) {
-        if (this.checkWith(level, key)) {
+        if (checkWith(level, key, this._with)) {
           const newNode = new field.target()
           newNode.filter_relationship = field.filter_relationship
           newNode._alias = key
@@ -147,74 +138,12 @@ class Model {
 
   addMatchs(node, attr) {
     this.cypher.match(node, false, false, false, attr)
-  }
-
-  /**
-   * Hydrate the model with the values of database
-   *
-   * @param {Model} model
-   * @param {JSON} dataJSON
-   * @param {Boolean} isArray
-   * @param {Integer} level
-   * @param {Boolean} onlyRelation
-   */
-  hydrate(model, dataJSON, level = 0, onlyRelation = false, previous) {
-    if (dataJSON) {
-      if (!onlyRelation && !model.id) {
-        // create only getter for id
-        model._values.id = dataJSON.id
-        createOnlyGetter(model, 'id', convertID)
-      }
-      // hydrate relationship Fields
-      if (previous) {
-        // THE RELATION HAS ATTRIBUTES
-        for (const [relKey, relAttr] of Object.entries(previous.attributes)) {
-          // create getter and setter for that attribute inside _values
-          createGetterAndSetter(model, relKey, relAttr.set, relAttr.get)
-          // if not array should be linked at _values directed
-          model._values[relKey] = dataJSON[relKey]
-        }
-      }
-      // hydrate node fields
-      Object.entries(model._attributes).forEach(([key, field]) => {
-        // if is model should hydrate with the right class
-        if (field.isModel && this.checkWith(level, key)) {
-          // with_related is ok, so there is information to hydrate
-          if (field.isArray) {
-            // create getter and setter for that attribute inside _values
-            createGetterAndSetter(model, key, field.set, field.get)
-            // if is array should create the key as array and push for each record
-            model[key] = new Collection()
-            dataJSON[key].forEach(data => {
-              const targetModel = new field.target()
-              const hydrated = this.hydrate(targetModel, data, level + 1, false, field)
-              // array should be pushed
-              model._values[key].push(hydrated)
-            })
-          } else {
-            // hydrate the model
-            const targetModel = new field.target()
-            const hydrated = this.hydrate(targetModel, dataJSON[key], level + 1, false, field)
-            // create getter and setter for that attribute inside _values
-            createGetterAndSetter(model, key, field.set, field.get)
-            // if not array should be linked at _values directed
-            model._values[key] = hydrated
-          }
-        } else if (!onlyRelation) {
-          // create getter and setter for that attribute inside _values
-          createGetterAndSetter(model, key, field.set, field.get, field.checkHash)
-          // just a value of the model
-          if (dataJSON[key]) model._values[key] = dataJSON[key]
-        }
-      })
-    }
-
-    return model
+    this.writeFilter(attr, `${node.getAliasName()}_${attr}`)
   }
 
   async fetch(with_related = []) {
     return this.constructor.findAll({
-      filterAttributes: [{ key: `id(${this.getAliasName()})`, value: this.id, order: 0 }],
+      filter_attributes: [{ key: `id(${this.getAliasName()})`, value: this.id, order: 0 }],
       with_related,
       parent: this,
     })
@@ -222,14 +151,13 @@ class Model {
 
   async delete(detach = false) {
     this.cypher = new Cypher()
-    this.filterAttributes = [
+    this.filter_attributes = [
       {
         key: `id(${this.getAliasName()})`,
         value: this.id,
       },
     ]
     this.doMatchs(this, false)
-    this.writeFilter()
 
     const data = await this.cypher.delete(this.getAliasName(), detach)
     return data
@@ -257,10 +185,9 @@ class Model {
 
       this.setAttributes(false)
 
-      const data = await this.cypher.create(this.getCypherName())
+      const record = await this.cypher.create(this.getCypherName())
 
-      const fields = data._fields[0] // JSON from database
-      this.hydrate(this, fields)
+      hydrate(this, record, this.getAliasName())
     } else {
       // update
       this.cypher.addWhere({
@@ -272,10 +199,9 @@ class Model {
 
       this.setAttributes()
 
-      const data = await this.cypher.update()
-      const fields = data._fields[0] // JSON from database
+      const record = await this.cypher.update()
 
-      this.hydrate(this, fields)
+      hydrate(this, record, this.getAliasName())
     }
   }
 
@@ -287,10 +213,10 @@ class Model {
    * @param {JSON} attributes
    */
   async relate(attr, node, attributes = {}, create = true) {
-    // CLEAN OLD _WITHS TO NOT INTERFERE
+    // ADD TO _WITH TO RETURN THE RELATION
     this._with = []
     this.cypher = new Cypher()
-    this.filterAttributes = [
+    this.filter_attributes = [
       {
         key: `id(${this.getAliasName()})`,
         value: this.id,
@@ -299,15 +225,12 @@ class Model {
         key: `id(${attr})`,
         value: node.id,
       },
-    ]
+    ].map(fa => this.prepareFilter(fa, this))
     this.doMatchs(this)
     this.addMatchs(node, attr)
-
-    // Filters not ordered
-    this.writeFilter()
-
     // ADD TO _WITH TO RETURN THE RELATION
     this._with = [[attr]]
+    setWith(this._with) // used on hydrate
     // ADD THE ATTRIBUTES ON RELATION
     Object.entries(attributes).forEach(([key, value]) => {
       this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + key, value)
@@ -315,9 +238,9 @@ class Model {
     // CREATE THE RELATION
     const field = this._attributes[attr]
     field.attr = attr
-    const data = await this.cypher.relate(this, field, node, create)
-    const fields = data._fields[0] // JSON from database
-    this.hydrate(this, fields)
+    const record = await this.cypher.relate(this, field, node, create)
+
+    hydrate(this, record, this.getAliasName())
   }
 
   /**
@@ -351,12 +274,12 @@ class Model {
     this.cypher = new Cypher()
     this._with = [[attr]]
     this.cypher.optional = false
-    this.filterAttributes = [
+    this.filter_attributes = [
       {
         attr: `id(${this.getAliasName()})`,
         value: this.id,
       },
-    ]
+    ].map(fa => this.prepareFilter(fa, this))
     this.doMatchs(this)
     return this.cypher.delete(`${this.getAliasName()}_${attr}`)
   }
@@ -370,20 +293,18 @@ class Model {
     this.cypher = new Cypher()
     this._with = [[attr]]
     this.cypher.optional = false
-    this.filterAttributes = [
+    this.filter_attributes = [
       {
         key: `id(${this.getAliasName()})`,
         value: this.id,
-        order: 0,
       },
       {
         key: `id(${attr})`,
         value: node.id,
       },
-    ]
+    ].map(fa => this.prepareFilter(fa, this))
 
     this.doMatchs(this)
-    this.writeFilter()
 
     return this.cypher.delete(`${this.getAliasName()}_${attr}`)
   }
@@ -413,21 +334,19 @@ class Model {
   static async findByID(id, config = {}) {
     const self = new this()
 
-    config.filterAttributes = [
+    config.filter_attributes = [
       {
         key: `id(${self.getAliasName()})`,
         value: parseInt(id, 10),
-        order: 0,
       },
-    ]
+    ].concat(config.filter_attributes)
 
     const data = await this.findAll(config)
-
     return data[0]
   }
 
-  static async findBy(filterAttributes = [], config = {}) {
-    config.filterAttributes = filterAttributes
+  static async findBy(filter_attributes = [], config = {}) {
+    config.filter_attributes = filter_attributes
     return this.findAll(config)
   }
 
@@ -446,7 +365,7 @@ class Model {
     config = Object.assign(
       {
         with_related: [],
-        filterAttributes: [],
+        filter_attributes: [],
         onlyRelation: false,
         order_by: [],
         skip: '',
@@ -460,39 +379,69 @@ class Model {
       const w = item.split('__')
       self._with.push(w)
     })
+    setWith(self._with)
 
     self.cypher = new Cypher()
-    self.cypher.isDistinct()
+    // self.cypher.isDistinct()
     self.cypher.optional = config.optional
     self.cypher.skip = config.skip
     self.cypher.limit = config.limit
-    self.filterAttributes = config.filterAttributes
-    self.doMatchs(self, false, 0)
+    self.filter_attributes = config.filter_attributes.map(fa => self.prepareFilter(fa, self))
 
-    // Filters not ordered
-    self.writeFilter()
+    self.order_by = config.order_by.map(ob => {
+      const isCypherFunction = /.+\(.+\)/.test(ob.key)
+      if (isCypherFunction) {
+        throw new Error('Functions is not allowed in order_by')
+      } else {
+        ob.for = ob.key.split('.').length > 1 ? ob.key.split('.')[0] : self.getAliasName()
+        ob.attr = ob.key.split('.').length > 1 ? ob.key : `${self.getAliasName()}.${ob.key}`
+      }
 
-    config.order_by.forEach(([key, direction]) => {
-      const attr =
-        key.indexOf('.') > 0 || key.indexOf('(') > 0 ? key : self.getAliasName() + '.' + key
-      self.cypher.addOrderBy(attr, direction || 'ASC')
+      return ob
     })
+    self.doMatchs(self, false, 0)
+    self.writeOrderBy()
 
     const data = await self.cypher.find()
 
     const result = new Collection()
+    const ids = []
     data.forEach(record => {
       let model = new this()
+      const main = record._fields[record._fieldLookup[model.getAliasName()]]
+      const id = convertID(main.id)
+
       if (config.parent) {
         model = config.parent
       }
-      const fields = record._fields[0] // JSON from database
-      const hydrated = self.hydrate(model, fields, 0, config.onlyRelation)
 
-      result.push(hydrated)
+      if (ids.includes(id)) {
+        model = result[ids.indexOf(id)]
+      } else {
+        ids.push(id)
+      }
+
+      result[ids.indexOf(id)] = hydrate(model, record, model.getAliasName())
     })
 
     return result
+  }
+
+  prepareFilter(fa, model) {
+    if (!fa) return false
+    const isCypherFunction = /.+\(.+\)/.test(fa.key)
+    if (isCypherFunction) {
+      const regExp = /\(([^)]+)\)/
+      const matches = regExp.exec(fa.key)
+
+      //matches[1] contains the value between the parentheses
+      fa.for = matches[1]
+      fa.attr = fa.key
+    } else {
+      fa.for = fa.key.split('.').length > 1 ? fa.key.split('.')[0] : model.getAliasName()
+      fa.attr = fa.key.split('.').length > 1 ? fa.key : `${model.getAliasName()}.${fa.key}`
+    }
+    return fa
   }
 }
 

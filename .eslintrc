@@ -6,6 +6,12 @@
     "sourceType": "module"
   },
   "plugins": ["babel"],
+  "env": {
+    "commonjs": true,
+    "es6": true,
+    "mocha": true,
+    "node": true
+  },
   "settings": {
     "import/resolver": {
       "node": {

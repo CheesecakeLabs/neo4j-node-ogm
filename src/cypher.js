@@ -1,9 +1,26 @@
 import { getConnection } from './driver'
+import { checkWith } from './hydrate'
 
 const database = getConnection()
 class Cypher {
   constructor(stmt = '') {
     this.clean(stmt)
+    this.operators = [
+      '=',
+      '=~',
+      '<>',
+      '<',
+      '>',
+      '<=',
+      '>=',
+      'IS NULL',
+      'IS NOT NULL',
+      'STARTS WITH',
+      'ENDS WITH',
+      'CONTAINS',
+      'EXISTS',
+      'IN',
+    ]
   }
 
   clean(stmt = '') {
@@ -14,7 +31,7 @@ class Cypher {
     this.setString = ''
     this.orders = []
     this.return = {}
-    this.returnString = ''
+    this.returnStrings = []
     this.distinct = ''
     this.skip = ''
     this.limit = ''
@@ -22,41 +39,11 @@ class Cypher {
     this.optional = true
   }
 
-  addWhere({ attr, operator = '=', value }) {
-    let whereString
-    switch (operator) {
-      case 'IN':
-        whereString = `${attr} ${operator} ${value}`
-        break
-      default:
-        whereString = `${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
-    }
-
-    this.wheres.push(whereString)
-  }
-
-  writeWhere() {
-    if (this.wheres.length > 0) {
-      // this.whereString = ` WITH ${this.nodes.join(', ')}`
-      const whereString = ` WHERE ${this.wheres.join(' AND ')}`
-      this.wheres = []
-      return whereString
-    }
-
-    return ''
-  }
-
   addReturn(key, value) {
     this.return[key] = value
   }
 
-  match(
-    node,
-    previousAlias = false,
-    relationship = false,
-    targetModel = false,
-    dontPutOnReturn = false
-  ) {
+  match(node, previousAlias = false, relationship = false, targetModel = false, dontPutOnReturn = false) {
     if (targetModel) {
       const relationName = `${node.getAliasName()}_${previousAlias}${relationship}`
 
@@ -78,13 +65,17 @@ class Cypher {
         )})`
       )
       this.nodes.push(previousAlias)
+      this.addReturn(previousAlias, targetModel)
     } else {
       if (!dontPutOnReturn) {
         this.matchs.push(`MATCH (${node.getCypherName()})`)
         this.nodes.push(node.getAliasName())
         this.addReturn(node.getAliasName(), node)
       } else {
-        this.matchs.push(`, (${dontPutOnReturn}:${node.getNodeName()})`)
+        this.matchs.push(`MATCH (${dontPutOnReturn}:${node.getNodeName()})`)
+        this.nodes.push(node.getAliasName())
+        node._alias = dontPutOnReturn
+        this.addReturn(dontPutOnReturn, node)
       }
     }
   }
@@ -101,13 +92,41 @@ class Cypher {
     }
   }
 
-  addOrderBy(attr, direction) {
+  addWhere({ attr, operator, value }) {
+    let whereString
+    if (!this.operators.includes(operator)) operator = '='
+
+    switch (operator) {
+      case 'IN':
+        if (!Array.isArray(value)) throw new Error('on IN operator, value must be an Array')
+        whereString = `${attr} ${operator} ['${value.join("','")}']`
+        break
+      default:
+        whereString = `${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
+    }
+
+    this.wheres.push(whereString)
+  }
+
+  writeWhere() {
+    if (this.wheres.length > 0) {
+      const whereString = ` WHERE ${this.wheres.join(' AND ')}`
+      this.wheres = []
+      return whereString
+    }
+
+    return ''
+  }
+
+  addOrderBy(attr, direction = 'ASC') {
     this.orders.push(`${attr} ${direction}`)
   }
 
   writeOrderBy(CONCAT = ' , ') {
     if (this.orders.length > 0) {
-      return `ORDER BY ${this.orders.join(CONCAT)}`
+      const orderString = ` ORDER BY ${this.orders.join(CONCAT)}`
+      this.orders = []
+      return orderString
     }
 
     return ''
@@ -125,29 +144,24 @@ class Cypher {
     }
   }
 
-  modelReturn(alias, model, attributeID, level = 0, wasCollected = false, previous = false) {
-    this.returnString += `${alias} {`
-
+  modelReturn(alias, model, attributeID, level = 0) {
+    let returnString = `${alias} {`
     const attrs = []
-    let willCollect = false
 
     attrs.push(`id:id(${attributeID})`)
-
     // LOOP ON MODEL ATTRIBUTES
     for (const [attr, field] of Object.entries(model._attributes)) {
       if (field.isModel) {
-        if (model.checkWith(level, attr, this.actualModel._with) && this.isFind) {
-          if (field.isModel && level < 1) {
-            willCollect = true
+        if (checkWith(level, attr, this.actualModel._with) && this.isFind) {
+          let relationString = `${model.getAliasName()}_${attr} {`
+          const relAttrs = []
+          for (const [relAttr] of Object.entries(field.attributes)) {
+            relAttrs.push(`.${relAttr}`)
           }
-          this.modelReturn(
-            `${attr}:${willCollect ? 'collect(' + this.distinct + ' ' + attr : attr}`,
-            new field.target(),
-            attr,
-            level + 1,
-            willCollect,
-            { field, model }
-          )
+
+          relationString += `${relAttrs.join(', ')} }`
+
+          this.returnStrings.push(relationString)
         }
       } else {
         if (!model.parent) {
@@ -156,33 +170,16 @@ class Cypher {
       }
     }
 
-    if (previous) {
-      // THE RELATION HAS ATTRIBUTES
-      for (const [relAttr] of Object.entries(previous.field.attributes)) {
-        attrs.push(`${relAttr}:${previous.model.getAliasName()}_${attributeID}.${relAttr}`)
-      }
-    }
+    returnString += `${attrs.join(', ')} }`
 
-    this.returnString += `${attrs.join(', ')} }`
-
-    if (wasCollected && previous) {
-      if (previous.field.isArray) {
-        this.returnString += ') '
-      } else {
-        this.returnString += ')[0] '
-      }
-    }
-
-    if (level > 0) {
-      this.returnString += ','
-    }
+    this.returnStrings.push(returnString)
   }
 
   async create(nodeAlias) {
     this.writeSets(' , ')
     this.writeReturn(this.return)
-    const stmt = `CREATE (${nodeAlias}) ${this.setString} RETURN ${this.returnString}`
-    // console.log(stmt)
+    const stmt = `CREATE (${nodeAlias}) ${this.setString} RETURN ${this.returnStrings.join(' , ')}`
+    console.log(stmt)
     const session = await database.session()
 
     let result
@@ -202,7 +199,11 @@ class Cypher {
     this.writeWhere()
     this.writeSets(' , ')
     this.writeReturn(this.return)
-    const stmt = `${this.matchs.join(' ')} ${this.setString} RETURN ${this.returnString}`
+    const stmt = `
+    ${this.matchs.join(' ')}
+    ${this.setString}
+    RETURN ${this.returnStrings.join(' , ')}`
+    console.log(stmt)
     const session = await database.session()
 
     let result
@@ -220,7 +221,7 @@ class Cypher {
 
   async delete(alias, detach = false) {
     const stmt = `${this.matchs.join(' ')} ${detach ? 'DETACH' : ''} DELETE ${alias}`
-    // console.log(stmt)
+    console.log(stmt)
     const session = await database.session()
 
     try {
@@ -240,13 +241,12 @@ class Cypher {
     this.writeSets(' , ')
     const stmt = `${this.matchs.join(' ')}
                   ${create ? 'CREATE' : 'MATCH'}
-                  (${node1.getAliasName()})-[${node1.getAliasName()}_${
-      relation.attr
-    }:${relation.getLabelName()}]${create ? '->' : '-'}(${relation.attr})
-                  ${this.setString} RETURN ${this.returnString}`
+                  (${node1.getAliasName()})-[${node1.getAliasName()}_${relation.attr}:${relation.getLabelName()}]
+                  ${create ? '->' : '-'}(${relation.attr})
+                  ${this.setString} RETURN ${this.returnStrings.join(' , ')}`
 
     const session = database.session()
-    // console.log(stmt)
+    console.log(stmt)
     try {
       const result = await session.run(stmt)
       session.close()
@@ -260,13 +260,13 @@ class Cypher {
   async find() {
     this.writeReturn(this.return)
     const stmt = `${this.matchs.join(' ')} ${this.setString}
-                  RETURN ${this.distinct} ${this.returnString}
+                  RETURN ${this.distinct} ${this.returnStrings.join(' , ')}
                   ${this.writeOrderBy()} ${this.skip ? `SKIP ${this.skip}` : ''} ${
       this.limit ? `LIMIT ${this.limit}` : ''
     }`
 
     const session = database.session()
-    // console.log(stmt)
+    console.log(stmt)
     try {
       const result = await session.run(stmt)
       session.close()

@@ -16,6 +16,14 @@ class Collection extends Object {
     return Object.keys(this).length
   }
 
+  map(fc) {
+    return Object.values(this).map(fc)
+  }
+
+  some(fc) {
+    return Object.values(this).some(fc)
+  }
+
   async deleteAll(detach = false) {
     return Promise.all(Object.values(this).map(item => item.delete(detach)))
   }

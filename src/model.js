@@ -3,6 +3,19 @@ import { Collection } from './collection'
 import { createGetterAndSetter, convertID } from './utils'
 import { hydrate, checkWith, setWith } from './hydrate'
 
+const ORDER_BY_FUNCTIONS_ALLOWED = [
+  'toUpper',
+  'toLower',
+  'left',
+  'lTrim',
+  'replace',
+  'right',
+  'rTrim',
+  'trim',
+  'substring',
+  'toString',
+]
+
 class Model {
   /**
    * Constructor
@@ -391,7 +404,14 @@ class Model {
     self.order_by = config.order_by.map(ob => {
       const isCypherFunction = /.+\(.+\)/.test(ob.key)
       if (isCypherFunction) {
-        throw new Error('Functions is not allowed in order_by')
+        const regExp = /(.+)\(([^)]+)\)/
+        const matches = regExp.exec(ob.key)
+
+        if (!ORDER_BY_FUNCTIONS_ALLOWED.includes(matches[1]))
+          throw new Error(`Function (${matches[1]}) are not allowed in order_by`)
+
+        ob.for = matches[2]
+        ob.attr = ob.key
       } else {
         ob.for = ob.key.split('.').length > 1 ? ob.key.split('.')[0] : self.getAliasName()
         ob.attr = ob.key.split('.').length > 1 ? ob.key : `${self.getAliasName()}.${ob.key}`

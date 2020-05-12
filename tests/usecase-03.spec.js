@@ -4,7 +4,7 @@ import { User, Role } from './models'
 describe('Use Cases - 03', () => {
   describe('::skip and limit', () => {
     it('should select the first one', done => {
-      User.findAll({ skip: 0, limit: 1, order_by: [{ key: 'email' }] })
+      User.findAll({ skip: 0, limit: 1, order_by: [{ key: 'toUpper(user.email)' }] })
         .then(users => {
           expect(users.toValues()[0].email).to.be.equal('email@domain.com')
           expect(users.toValues()).to.have.lengthOf(1)

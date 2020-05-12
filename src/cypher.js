@@ -2,25 +2,26 @@ import { getConnection } from './driver'
 import { checkWith } from './hydrate'
 
 const database = getConnection()
+const OPERATORS = [
+  '=',
+  '=~',
+  '<>',
+  '<',
+  '>',
+  '<=',
+  '>=',
+  'IS NULL',
+  'IS NOT NULL',
+  'STARTS WITH',
+  'ENDS WITH',
+  'CONTAINS',
+  'EXISTS',
+  'IN',
+]
+
 class Cypher {
   constructor(stmt = '') {
     this.clean(stmt)
-    this.operators = [
-      '=',
-      '=~',
-      '<>',
-      '<',
-      '>',
-      '<=',
-      '>=',
-      'IS NULL',
-      'IS NOT NULL',
-      'STARTS WITH',
-      'ENDS WITH',
-      'CONTAINS',
-      'EXISTS',
-      'IN',
-    ]
   }
 
   clean(stmt = '') {
@@ -95,7 +96,7 @@ class Cypher {
 
   addWhere({ attr, operator, value }) {
     let whereString
-    if (!this.operators.includes(operator)) operator = '='
+    if (!OPERATORS.includes(operator)) operator = '='
 
     switch (operator) {
       case 'IN':

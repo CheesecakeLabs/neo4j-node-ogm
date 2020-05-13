@@ -175,8 +175,7 @@ class Model {
     ].map(fa => this.prepareFilter(fa, this))
     this.doMatchs(this, false)
 
-    const data = await this.cypher.delete(this.getAliasName(), detach)
-    return data
+    return this.cypher.delete(this.getAliasName(), detach)
   }
 
   setAttributes(create = true) {

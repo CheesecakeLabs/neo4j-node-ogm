@@ -207,8 +207,9 @@ await users.deleteAll()
 
 - save() - return Integer ID/false
 - delete(Bool detach) - return true/false
-- createRelationship(Node to, String attribute, Object properties)
-- recreateRelationship(Node to, String attribute, Object properties)
+- createRelationship(String attribute, Node to, Object properties)
+- updateRelationship(String attribute, Node specificRelatedNode, Object properties) - used to changes relationships attributes
+- recreateRelationship(String attribute, Node to, Object properties) - remove old relationships of that attribute
 - removeRelationship(String attribute, Node specificRelatedNode)
 - removeAllRelationships(String attribute)
 - fetch(Array attributes)

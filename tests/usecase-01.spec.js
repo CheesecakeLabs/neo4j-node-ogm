@@ -45,6 +45,7 @@ describe('Use Cases - 01', () => {
           expect(user.active).to.be.true
           expect(user2.active).to.be.false
           expect(user.created_at).to.not.be.null
+          expect(user.isValid()).to.be.equal(true)
         })
         .then(() => done(), done)
     })
@@ -57,6 +58,14 @@ describe('Use Cases - 01', () => {
         expect(error.message).to.be.equal('Field: email is required')
         done()
       })
+    })
+
+    it('isValid function', done => {
+      const user = new User({
+        language: 'dsadasdasdas',
+      })
+      expect(user.isValid()).to.be.equal(false)
+      done()
     })
 
     it('throw valid field', done => {

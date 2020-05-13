@@ -192,6 +192,18 @@ class Model {
     })
   }
 
+  isValid() {
+    try {
+      Object.entries(this._attributes).forEach(([key, field]) => {
+        const data = field.hasDefaultValue(this._values[key]) || this._values[key]
+        field.checkValidation(key, data)
+      })
+      return true
+    } catch (e) {
+      return false
+    }
+  }
+
   async save() {
     this.cypher = new Cypher()
     if (this.id === undefined) {

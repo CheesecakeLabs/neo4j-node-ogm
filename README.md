@@ -213,6 +213,7 @@ await users.deleteAll()
 - removeRelationship(String attribute, Node specificRelatedNode)
 - removeAllRelationships(String attribute)
 - fetch(Array attributes)
+- isValid() - return true/false if the field criteria match
 
 Fields type:
 

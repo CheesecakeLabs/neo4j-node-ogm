@@ -66,7 +66,7 @@ describe('Use Cases - 03', () => {
 
     it('fetching a relationship', done => {
       user
-        .fetch(['role'])
+        .fetch(['friends', 'role'])
         .then(() => {
           expect(user.role.key).to.be.equal('key-ADMIN')
         })

@@ -47,15 +47,17 @@ const hydrate = (model, record, fieldLookup, level = 0, relationFieldLookup = nu
           // should return as Array (Object with key)
           // if is array should create the key as array and push for each record
           const next = record._fields[record._fieldLookup[key]]
-          if (next?.id) {
+
+          // create a empty Collection
+          if (model._values[key] === undefined) {
             // create getter and setter for that attribute inside _values
             createGetterAndSetter(model, key, field.set, field.get)
+            model._values[key] = new Collection()
+            model._values[`${key}_ids`] = []
+          }
 
+          if (next?.id) {
             const id = convertID(next.id)
-            if (model._values[key] === undefined) {
-              model._values[key] = new Collection()
-              model._values[`${key}_ids`] = []
-            }
 
             if (!model._values[`${key}_ids`].includes(id)) {
               model._values[`${key}_ids`].push(id)

@@ -439,12 +439,12 @@ class Model {
 
       if (config.parent) {
         model = config.parent
-      }
-
-      if (ids.includes(id)) {
-        model = result[ids.indexOf(id)]
       } else {
-        ids.push(id)
+        if (ids.includes(id)) {
+          model = result[ids.indexOf(id)]
+        } else {
+          ids.push(id)
+        }
       }
 
       result[ids.indexOf(id)] = hydrate(model, record, model.getAliasName())

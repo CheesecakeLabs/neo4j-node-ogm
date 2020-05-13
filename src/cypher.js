@@ -252,7 +252,7 @@ class Cypher {
       const result = await session.run(stmt)
       session.close()
       this.clean()
-      return result.records[0]
+      return result.records
     } catch (e) {
       throw new Error(`Cypher ERROR: ${e.message}`)
     }

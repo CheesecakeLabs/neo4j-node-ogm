@@ -155,8 +155,11 @@ class Model {
   }
 
   async fetch(with_related = []) {
+    // reset alias to default
+    this._alias = this._labels.join('').toLowerCase()
+    // return a hydrated findAll
     return this.constructor.findAll({
-      filter_attributes: [{ key: `id(${this.getAliasName()})`, value: this.id, order: 0 }],
+      filter_attributes: [{ key: `id(${this.getAliasName()})`, value: this.id }],
       with_related,
       parent: this,
     })
@@ -248,12 +251,15 @@ class Model {
     Object.entries(attributes).forEach(([key, value]) => {
       this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + key, value)
     })
-    // CREATE THE RELATION
-    const field = this._attributes[attr]
-    field.attr = attr
-    const record = await this.cypher.relate(this, field, node, create)
 
-    hydrate(this, record, this.getAliasName())
+    // CREATE THE RELATION FOR THIS ATTR
+    const field = this._attributes[attr]
+    if (!field) throw new Error(`Attribute "${attr}" does not exists on model "${this.getAliasName()}"`)
+    field.attr = attr
+    const data = await this.cypher.relate(this, field, node, create)
+    data.forEach(record => {
+      hydrate(this, record, this.getAliasName())
+    })
   }
 
   /**

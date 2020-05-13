@@ -172,7 +172,7 @@ class Model {
         key: `id(${this.getAliasName()})`,
         value: this.id,
       },
-    ]
+    ].map(fa => this.prepareFilter(fa, this))
     this.doMatchs(this, false)
 
     const data = await this.cypher.delete(this.getAliasName(), detach)

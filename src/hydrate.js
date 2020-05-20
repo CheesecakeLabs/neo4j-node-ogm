@@ -52,19 +52,24 @@ const hydrate = (model, record, fieldLookup, level = 0, relationFieldLookup = nu
           if (model._values[key] === undefined) {
             // create getter and setter for that attribute inside _values
             createGetterAndSetter(model, key, field.set, field.get)
-            model._values[key] = new Collection()
+            model._values[key] = new Collection() // this is the result
             model._values[`${key}_ids`] = []
           }
 
           if (next?.id) {
             const id = convertID(next.id)
 
+            let targetModel
             if (!model._values[`${key}_ids`].includes(id)) {
               model._values[`${key}_ids`].push(id)
+              targetModel = new field.target()
+            } else {
+              targetModel = model._values[key][model._values[`${key}_ids`].indexOf(id)]
             }
-            // console.log('hidratando array', model.getAliasName(), key, model[`${key}_ids`].indexOf(id), record)
+
+            // console.log('hidratando array', model.getAliasName(), key, model._values[`${key}_ids`].indexOf(id))
             model._values[key][model._values[`${key}_ids`].indexOf(id)] = hydrate(
-              new field.target(),
+              targetModel,
               record,
               key,
               level + 1,
@@ -76,7 +81,8 @@ const hydrate = (model, record, fieldLookup, level = 0, relationFieldLookup = nu
           // should return as Object
           // hydrate the model
           // console.log('hidratando object', model.getAliasName(), key, record)
-          const hydrated = hydrate(new field.target(), record, key, level + 1)
+          let targetModel = model._values[key] || new field.target()
+          const hydrated = hydrate(targetModel, record, key, level + 1)
           // create getter and setter for that attribute inside _values
           createGetterAndSetter(model, key, field.set, field.get)
           // if not array should be linked at _values directed

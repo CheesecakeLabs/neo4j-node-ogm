@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { User, Role } from './models'
+import { User, Role, Company } from './models'
 
 describe('Use Cases - 03', () => {
   describe('::skip and limit', () => {
@@ -23,11 +23,14 @@ describe('Use Cases - 03', () => {
   })
   describe('::relationship', () => {
     let role
+    let role2
     let user
     let user2
+
     it('selecting role and user', done => {
-      Role.findBy([{ key: 'key', value: 'ADMIN' }]).then(roles => {
+      Role.findAll().then(roles => {
         role = roles[0]
+        role2 = roles[1]
         User.findAll()
           .then(users => {
             user = users.toValues()[0]
@@ -37,7 +40,7 @@ describe('Use Cases - 03', () => {
       })
     })
 
-    it('relating', done => {
+    it('relating 1', done => {
       user
         .createRelationship('role', role)
         .then(() => {
@@ -69,6 +72,27 @@ describe('Use Cases - 03', () => {
         .fetch(['friends', 'role'])
         .then(() => {
           expect(user.role.key).to.be.equal('key-ADMIN')
+        })
+        .then(() => done(), done)
+    })
+
+    it('get all builds from company with_related 1 level', done => {
+      Company.findAll({
+        with_related: ['builds'],
+      })
+        .then(companies => {
+          expect(companies[0].builds.length()).to.be.equal(2)
+        })
+        .then(() => done(), done)
+    })
+
+    it('get all users with_related 2 levels', done => {
+      User.findAll({
+        with_related: ['role__name', 'companies__builds'],
+      })
+        .then(users => {
+          const companies = users[1].companies[0] || users[0].companies[0]
+          expect(companies.builds.length()).to.be.equal(2)
         })
         .then(() => done(), done)
     })

@@ -62,15 +62,5 @@ describe('Use Cases - 02', () => {
         })
         .then(() => done(), done)
     })
-
-    it('get all users with_related', done => {
-      User.findAll({
-        with_related: ['role__name', 'friends'],
-      })
-        .then(users => {
-          expect(users.toJSON()).to.have.lengthOf.at.least(1)
-        })
-        .then(() => done(), done)
-    })
   })
 })

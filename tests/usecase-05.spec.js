@@ -11,12 +11,15 @@ describe('Use Cases - 05', () => {
         name: 'User for check datetime',
         email: 'datetime@email.com',
         language: 'pt_BR',
-        password: 12345
+        password: 12345,
       })
 
-      user.save().then(() => {
-        expect(user.created_at).to.be.date()
-      }).then(() => done(), done)
+      user
+        .save()
+        .then(() => {
+          expect(user.created_at).to.be.date()
+        })
+        .then(() => done(), done)
     })
   })
 })

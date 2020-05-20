@@ -57,6 +57,13 @@ class User extends Model {
         labels: ['HAS_ROLE'],
         target: Role,
       }), // role : { label: 'HAS_ROLE': children: Node }
+      companies: Field.Relationships({
+        labels: ['HAS'],
+        target: Company,
+        attributes: {
+          intimacy: Field.String(),
+        },
+      }),
       friends: Field.Relationships({
         labels: ['FRIENDSHIP'],
         target: User,
@@ -69,4 +76,31 @@ class User extends Model {
   }
 }
 
-export { User, Role, Text }
+class Company extends Model {
+  constructor(values) {
+    const labels = ['Company']
+    const attributes = {
+      name: Field.String(),
+      builds: Field.Relationships({
+        labels: ['HAS'],
+        target: Build,
+        attributes: {
+          intimacy: Field.String(),
+        },
+      }),
+    }
+    super(values, labels, attributes)
+  }
+}
+
+class Build extends Model {
+  constructor(values) {
+    const labels = ['Build']
+    const attributes = {
+      name: Field.String(),
+    }
+    super(values, labels, attributes)
+  }
+}
+
+export { User, Role, Text, Company, Build }

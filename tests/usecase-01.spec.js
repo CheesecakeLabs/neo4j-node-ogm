@@ -1,8 +1,12 @@
 import { expect } from 'chai'
-import { User, Role, Text } from './models'
+import { User, Role, Text, Company, Build } from './models'
 import { getConnection } from '../src'
 
 describe('Use Cases - 01', () => {
+  let user1
+  let company1
+  let build1
+  let build2
   describe('::clean database', () => {
     it('should clean the information on database', done => {
       // CLEAN DATABASE
@@ -37,6 +41,7 @@ describe('Use Cases - 01', () => {
 
       Promise.all([p1, p2])
         .then(() => {
+          user1 = user
           expect(user.id).to.be.a('number')
           expect(user.name).to.be.equal('User UseCase Test')
           expect(user.email).to.be.equal('email@domain.com')
@@ -105,6 +110,48 @@ describe('Use Cases - 01', () => {
         .then(() => done(), done)
     })
 
+    it('create a simple company', done => {
+      const company = new Company({
+        name: 'company 1',
+      })
+
+      company
+        .save()
+        .then(() => {
+          company1 = company
+          expect(company.name).to.be.equal('company 1')
+        })
+        .then(() => done(), done)
+    })
+
+    it('create a simple build 1', done => {
+      const build = new Build({
+        name: 'build 1',
+      })
+
+      build
+        .save()
+        .then(() => {
+          build1 = build
+          expect(build.name).to.be.equal('build 1')
+        })
+        .then(() => done(), done)
+    })
+
+    it('create a simple build 2', done => {
+      const build = new Build({
+        name: 'build 2',
+      })
+
+      build
+        .save()
+        .then(() => {
+          build2 = build
+          expect(build.name).to.be.equal('build 2')
+        })
+        .then(() => done(), done)
+    })
+
     it('create 2 simple text', done => {
       const text1 = new Text({
         value: 'Administrator',
@@ -123,6 +170,19 @@ describe('Use Cases - 01', () => {
           expect(text2.value).to.be.equal('Administrador')
         })
         .then(() => done(), done)
+    })
+
+    it('relating 2 levels', done => {
+      user1.createRelationship('companies', company1).then(() => {
+        company1.createRelationship('builds', build1).then(() => {
+          company1
+            .createRelationship('builds', build2)
+            .then(() => {
+              expect(true).to.be.true
+            })
+            .then(() => done(), done)
+        })
+      })
     })
   })
 })

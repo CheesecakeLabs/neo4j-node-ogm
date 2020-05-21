@@ -37,7 +37,6 @@ class Cypher {
     this.skip = ''
     this.limit = ''
     this.stmt = stmt
-    this.optional = true
   }
 
   addReturn(key, value) {
@@ -60,24 +59,16 @@ class Cypher {
 
       this.matchs.push(
         `${
-          this.optional ? 'OPTIONAL' : ''
-        } MATCH (${node.getCypherName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(
+          targetModel.isOptional ? 'OPTIONAL' : ''
+        } MATCH (${node.getAliasName()})-[${relationName} ${filterRelationship}]-(${targetModel.getCypherName(
           previousAlias
         )})`
       )
-      this.nodes.push(previousAlias)
-      this.addReturn(previousAlias, targetModel)
     } else {
       if (!dontPutOnReturn) {
         this.matchs.push(`MATCH (${node.getCypherName()})`)
-        this.nodes.push(node.getAliasName())
-        this.addReturn(node.getAliasName(), node)
       } else {
         this.matchs.push(`MATCH (${dontPutOnReturn}:${node.getNodeName()})`)
-        this.nodes.push(node.getAliasName())
-        node._alias = dontPutOnReturn
-        node._with = []
-        this.addReturn(dontPutOnReturn, node)
       }
     }
   }
@@ -138,36 +129,26 @@ class Cypher {
     this.distinct = bool ? 'DISTINCT' : ''
   }
 
-  writeReturn(nodes, isFind = true) {
-    this.isFind = isFind
-    for (const [alias, model] of Object.entries(nodes)) {
-      this.actualModel = model
-      this.modelReturn(alias, model, model.getAliasName())
+  modelReturnRelation(alias, field) {
+    let relationString = `${alias} {`
+    const relAttrs = []
+    for (const [relAttr] of Object.entries(field.attributes)) {
+      relAttrs.push(`.${relAttr}`)
     }
+
+    relationString += `${relAttrs.join(', ')} }`
+    this.returnStrings.push(relationString)
   }
 
-  modelReturn(alias, model, attributeID, level = 0) {
+  modelReturn(alias, model) {
     let returnString = `${alias} {`
     const attrs = []
 
-    attrs.push(`id:id(${attributeID})`)
+    attrs.push(`id:id(${alias})`)
     // LOOP ON MODEL ATTRIBUTES
     for (const [attr, field] of Object.entries(model._attributes)) {
-      if (field.isModel) {
-        if (checkWith(level, attr, this.actualModel._with)) {
-          let relationString = `${model.getAliasName()}_${attr} {`
-          const relAttrs = []
-          for (const [relAttr] of Object.entries(field.attributes)) {
-            relAttrs.push(`.${relAttr}`)
-          }
-
-          relationString += `${relAttrs.join(', ')} }`
-          this.returnStrings.push(relationString)
-        }
-      } else {
-        if (!model.parent) {
-          attrs.push(`.${attr}`)
-        }
+      if (!field.isModel) {
+        attrs.push(`.${attr}`)
       }
     }
 
@@ -178,7 +159,6 @@ class Cypher {
 
   async create(nodeAlias) {
     this.writeSets(' , ')
-    this.writeReturn(this.return)
     const stmt = `CREATE (${nodeAlias}) ${this.setString} RETURN ${this.returnStrings.join(' , ')}`
     // console.log(stmt)
     const session = await database.session()
@@ -199,7 +179,6 @@ class Cypher {
   async update() {
     this.writeWhere()
     this.writeSets(' , ')
-    this.writeReturn(this.return)
     const stmt = `
     ${this.matchs.join(' ')}
     ${this.setString}
@@ -238,7 +217,6 @@ class Cypher {
 
   async relate(node1, relation, node2, create = true) {
     this.writeWhere()
-    this.writeReturn(this.return)
     this.writeSets(' , ')
     const stmt = `${this.matchs.join(' ')}
                   ${create ? 'CREATE' : 'MATCH'}
@@ -259,7 +237,6 @@ class Cypher {
   }
 
   async find() {
-    this.writeReturn(this.return)
     const stmt = `${this.matchs.join(' ')} ${this.setString}
                   RETURN ${this.distinct} ${this.returnStrings.join(' , ')}
                   ${this.writeOrderBy()} ${this.skip ? `SKIP ${this.skip}` : ''} ${

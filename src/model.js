@@ -120,8 +120,10 @@ class Model {
   doMatchs(node, relation, level = 0) {
     if (relation) {
       this.cypher.match(relation.previousNode, relation.previousAlias, relation.relationship, node)
+      this.cypher.modelReturn(relation.previousAlias, node)
     } else {
       this.cypher.match(node)
+      this.cypher.modelReturn(node.getAliasName(), node)
     }
 
     this.writeFilter(node.getAliasName(), `${relation?.previousNode?.getAliasName()}_${relation?.previousAlias}`)
@@ -129,10 +131,13 @@ class Model {
     Object.keys(node._attributes).forEach(key => {
       const field = node._attributes[key]
       if (field.isModel) {
-        if (checkWith(level, key, this._with)) {
+        const [found_condition, isOptional] = checkWith(level, key, this._with)
+        if (found_condition) {
           const newNode = new field.target()
+          this.cypher.modelReturnRelation(`${node.getAliasName()}_${key}`, field)
           newNode.filter_relationship = field.filter_relationship
           newNode._alias = key
+          newNode.isOptional = isOptional
           this.doMatchs(
             newNode,
             {
@@ -149,9 +154,11 @@ class Model {
     return true
   }
 
-  addMatchs(node, attr) {
-    this.cypher.match(node, false, false, false, attr)
-    this.writeFilter(attr, `${node.getAliasName()}_${attr}`)
+  addMatchs(node, field) {
+    this.cypher.match(node, false, false, false, field.attr)
+    this.cypher.modelReturn(field.attr, node)
+    this.cypher.modelReturnRelation(field.relationName, field)
+    this.writeFilter(field.attr, `${node.getAliasName()}_${field.attr}`)
   }
 
   async fetch(with_related = []) {
@@ -214,7 +221,7 @@ class Model {
 
       const record = await this.cypher.create(this.getCypherName())
 
-      hydrate(this, record, this.getAliasName())
+      hydrate(this, record)
     } else {
       // update
       this.cypher.addWhere({
@@ -228,7 +235,7 @@ class Model {
 
       const record = await this.cypher.update()
 
-      hydrate(this, record, this.getAliasName())
+      hydrate(this, record)
     }
   }
 
@@ -254,7 +261,14 @@ class Model {
       },
     ].map(fa => this.prepareFilter(fa, this))
     this.doMatchs(this)
-    this.addMatchs(node, attr)
+
+    // CREATE THE RELATION FOR THIS ATTR
+    const field = this._attributes[attr]
+    if (!field) throw new Error(`Attribute "${attr}" does not exists on model "${this.getAliasName()}"`)
+    field.attr = attr
+    field.relationName = `${this.getAliasName()}_${attr}`
+
+    this.addMatchs(node, field)
     // ADD TO _WITH TO RETURN THE RELATION
     this._with = [[attr]]
     setWith(this._with) // used on hydrate
@@ -263,13 +277,9 @@ class Model {
       this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + key, value)
     })
 
-    // CREATE THE RELATION FOR THIS ATTR
-    const field = this._attributes[attr]
-    if (!field) throw new Error(`Attribute "${attr}" does not exists on model "${this.getAliasName()}"`)
-    field.attr = attr
     const data = await this.cypher.relate(this, field, node, create)
     data.forEach(record => {
-      hydrate(this, record, this.getAliasName())
+      hydrate(this, record)
     })
   }
 
@@ -303,7 +313,6 @@ class Model {
   async removeAllRelationships(attr) {
     this.cypher = new Cypher()
     this._with = [[attr]]
-    this.cypher.optional = false
     this.filter_attributes = [
       {
         attr: `id(${this.getAliasName()})`,
@@ -322,7 +331,6 @@ class Model {
   async removeRelationship(attr, node) {
     this.cypher = new Cypher()
     this._with = [[attr]]
-    this.cypher.optional = false
     this.filter_attributes = [
       {
         key: `id(${this.getAliasName()})`,
@@ -458,7 +466,7 @@ class Model {
         }
       }
 
-      result[ids.indexOf(id)] = hydrate(model, record, model.getAliasName())
+      result[ids.indexOf(id)] = hydrate(model, record)
     })
 
     return result

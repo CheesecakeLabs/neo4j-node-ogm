@@ -60,9 +60,6 @@ class User extends Model {
       companies: Field.Relationships({
         labels: ['HAS'],
         target: Company,
-        attributes: {
-          intimacy: Field.String(),
-        },
       }),
       friends: Field.Relationships({
         labels: ['FRIENDSHIP'],
@@ -85,7 +82,7 @@ class Company extends Model {
         labels: ['HAS'],
         target: Build,
         attributes: {
-          intimacy: Field.String(),
+          purchased_in: Field.String(),
         },
       }),
     }

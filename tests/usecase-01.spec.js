@@ -174,9 +174,9 @@ describe('Use Cases - 01', () => {
 
     it('relating 2 levels', done => {
       user1.createRelationship('companies', company1).then(() => {
-        company1.createRelationship('builds', build1).then(() => {
+        company1.createRelationship('builds', build1, { purchased_in: 'april/2020' }).then(() => {
           company1
-            .createRelationship('builds', build2)
+            .createRelationship('builds', build2, { purchased_in: 'may/2020' })
             .then(() => {
               expect(true).to.be.true
             })

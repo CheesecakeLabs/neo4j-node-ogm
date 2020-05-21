@@ -23,14 +23,12 @@ describe('Use Cases - 03', () => {
   })
   describe('::relationship', () => {
     let role
-    let role2
     let user
     let user2
 
     it('selecting role and user', done => {
       Role.findAll().then(roles => {
         role = roles[0]
-        role2 = roles[1]
         User.findAll()
           .then(users => {
             user = users.toValues()[0]
@@ -82,17 +80,20 @@ describe('Use Cases - 03', () => {
       })
         .then(companies => {
           expect(companies[0].builds.length()).to.be.equal(2)
+          expect(companies[0].builds[0].purchased_in).to.be.equal('may/2020')
+          expect(companies[0].builds[1].purchased_in).to.be.equal('april/2020')
         })
         .then(() => done(), done)
     })
 
     it('get all users with_related 2 levels', done => {
       User.findAll({
-        with_related: ['role__name', 'companies__builds'],
+        with_related: ['role__name', '!companies__builds'],
       })
         .then(users => {
-          const companies = users[1].companies[0] || users[0].companies[0]
-          expect(companies.builds.length()).to.be.equal(2)
+          expect(users[0].companies[0].builds.length()).to.be.equal(2)
+          expect(users[0].companies[0].builds[0].purchased_in).to.be.equal('may/2020')
+          expect(users[0].companies[0].builds[1].purchased_in).to.be.equal('april/2020')
         })
         .then(() => done(), done)
     })

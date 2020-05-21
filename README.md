@@ -2,6 +2,8 @@
 
 Neo4j OGM for Node JS is designed to take care of the CRUD boilerplate involved with setting up a neo4j project with NodeJS. Just install, set up your models and go.
 
+Neo4j support version: 4.X.X
+
 ## Usage Instructions
 
 By default the connection will be setted based in your env vars
@@ -97,14 +99,14 @@ class User extends Model {
       role: Field.Relationship({
         labels: ['HAS_ROLE'],
         target: Role
-      }), // role : { label: 'HAS_ROLE': children: Node }
+      }),
       friends: Field.Relationships({
         labels: ['FRIENDSHIP'],
         target: User,
         attributes: {
           intimacy: Field.String()
         }
-      }) // friends : { label: 'FRIENDSHIP': children: [Node, ...] }
+      })
     }
     super(values, labels, attributes)
   }
@@ -119,10 +121,11 @@ const users = await User.findAll() // the return is a Object
 
 //feel free to iterable as Object
 for (const user of users.toValues()) {
-  await user.fetch(['role__name'])
+  await user.fetch(['!role__name']) // ! = force to have the relation
 }
 
 //or as Array (only data) -> users.toJSON()
+
 ```
 
 #### findAll with relations
@@ -130,8 +133,9 @@ for (const user of users.toValues()) {
 ```
 // return Collection of Nodes with your relations already filled
 const users = await User.findAll({
- with_related: ['role__name', 'friends']
+ with_related: ['!role__name', 'friends'] // ! = force to have the relation
 })
+
 ```
 
 #### findBy
@@ -140,10 +144,10 @@ const users = await User.findAll({
 //return Collection of Nodes with your relations already filled
 const users = User.findBy([
   { key: 'name', operator: 'STARTS WITH', value: 'Na'},
+  { key: 'language', operator: 'IN', value: ['pt_BR', 'en_US']}
   { key: 'role.key', value: 'admin'}
 ], {
-  with_related: ['role__name'],
-  optional: false // thats force to the with_related exists
+  with_related: ['role__name']
 })
 ```
 
@@ -154,6 +158,10 @@ const user = new User({
   email: 'natam.oliveira@ckl.io'
 })
 user.name = 'Natam Oliveira'
+if(!user.isValid()){
+  // in user.errors will have the errors
+}
+
 await user.save()
 ```
 

@@ -29,6 +29,7 @@ class Model {
     this._attributes = attributes
     this._alias = null
     this.filter_attributes = []
+    this.errors = {}
     Object.entries(attributes).forEach(([key, field]) => {
       createGetterAndSetter(this, key, field.set, field.get)
     })
@@ -189,26 +190,37 @@ class Model {
     Object.entries(this._attributes).forEach(([key, field]) => {
       const defaultValue = field.hasDefaultValue(this._values[key])
       if (defaultValue) this[key] = defaultValue
-
-      this._values[key] = field.checkValidation(key, this._values[key])
-      if (field.isModel === false) {
-        this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
-      } else if (create) {
-        // TODO: add the relation
+      try {
+        this._values[key] = field.checkValidation(key, this._values[key])
+        if (field.isModel === false) {
+          this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
+        } else if (create) {
+          // TODO: add the relation
+        }
+      } catch (e) {
+        const error = JSON.parse(e.message)
+        this.errors[error.key] = error.msg
+        throw new Error('Model invalid, check the .errors attribute')
       }
     })
   }
 
   isValid() {
-    try {
-      Object.entries(this._attributes).forEach(([key, field]) => {
-        const data = field.hasDefaultValue(this._values[key]) || this._values[key]
+    let ret = true
+    this.errors = {}
+
+    Object.entries(this._attributes).forEach(([key, field]) => {
+      const data = field.hasDefaultValue(this._values[key]) || this._values[key]
+      try {
         field.checkValidation(key, data)
-      })
-      return true
-    } catch (e) {
-      return false
-    }
+      } catch (e) {
+        const error = JSON.parse(e.message)
+        this.errors[error.key] = error.msg
+        ret = false
+      }
+    })
+
+    return ret
   }
 
   async save() {

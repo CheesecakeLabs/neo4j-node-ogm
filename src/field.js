@@ -67,20 +67,25 @@ class Field {
    */
   checkValidation(key, value) {
     // valid
-    if ((this.required && this.valid && !this.valid.includes(value)) || (value && this.valid && !this.valid.includes(value))) {
-      throw new Error(`Field: ${key} is not a valid option ${JSON.stringify(this.valid)}`)
+    if (
+      (this.required && this.valid && !this.valid.includes(value)) ||
+      (value && this.valid && !this.valid.includes(value))
+    ) {
+      throw new Error(
+        `{ "key": "${key}", "msg": "Field is not a valid option ${JSON.stringify(this.valid).replace(/"/g, "'")}" }`
+      )
     }
     // max_length
     if (this.max_length && value && value.length > this.max_length) {
-      throw new Error(`Field: ${key} has more than ${this.max_length} characters`)
+      throw new Error(`{ "key": "${key}", "msg": "Field has more than ${this.max_length} characters" }`)
     }
     // min_length
     if (this.min_length && value && value.length < this.min_length) {
-      throw new Error(`Field: ${key} has less than ${this.min_length} characters`)
+      throw new Error(`{ "key": "${key}", "msg": "Field has less than ${this.min_length} characters" }`)
     }
     // required
     if (this.required && !value) {
-      throw new Error(`Field: ${key} is required`)
+      throw new Error(`{ "key": "${key}", "msg": "Field is required" }`)
     }
 
     return value

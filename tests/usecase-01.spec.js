@@ -59,8 +59,8 @@ describe('Use Cases - 01', () => {
       const user = new User({
         name: 'User without email',
       })
-      user.save().catch(error => {
-        expect(error.message).to.be.equal('Field: email is required')
+      user.save().catch(() => {
+        expect(user.errors.email).to.be.equal('Field is required')
         done()
       })
     })
@@ -69,6 +69,7 @@ describe('Use Cases - 01', () => {
       const user = new User({
         language: 'dsadasdasdas',
       })
+      user.isValid()
       expect(user.isValid()).to.be.equal(false)
       done()
     })
@@ -79,8 +80,8 @@ describe('Use Cases - 01', () => {
         email: 'email@test.com',
         language: 'pt_PT',
       })
-      user.save().catch(error => {
-        expect(error.message).to.be.equal('Field: language is not a valid option ["pt_BR","en_US"]')
+      user.save().catch(() => {
+        expect(user.errors.language).to.be.equal("Field is not a valid option ['pt_BR','en_US']")
         done()
       })
     })
@@ -91,8 +92,8 @@ describe('Use Cases - 01', () => {
         email:
           'max_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_lengthmax_length@domain.com',
       })
-      user.save().catch(error => {
-        expect(error.message).to.be.equal('Field: email has more than 255 characters')
+      user.save().catch(() => {
+        expect(user.errors.email).to.be.equal('Field has more than 255 characters')
         done()
       })
     })

@@ -92,7 +92,8 @@ class Cypher {
     switch (operator) {
       case 'IN':
         if (!Array.isArray(value)) throw new Error('on IN operator, value must be an Array')
-        whereString = `${attr} ${operator} ['${value.join("','")}']`
+        value = value.map(v => (Number.isInteger(v) ? v : `'${v}'`))
+        whereString = `${attr} ${operator} [${value.join(',')}]`
         break
       default:
         whereString = `${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`

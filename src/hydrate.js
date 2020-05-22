@@ -84,6 +84,7 @@ const hydrate = (model, record, level = 0, relationFieldLookup = null, previous 
           // hydrate the model
           // console.log('hidratando object', model.getAliasName(), key, record)
           let targetModel = model._values[key] || new field.target()
+          targetModel._alias = key
           const hydrated = hydrate(targetModel, record, level + 1)
           // create getter and setter for that attribute inside _values
           createGetterAndSetter(model, key, field.set, field.get)

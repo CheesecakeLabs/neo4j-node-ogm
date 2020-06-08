@@ -327,7 +327,7 @@ class Model {
     this._with = [[attr]]
     this.filter_attributes = [
       {
-        attr: `id(${this.getAliasName()})`,
+        key: `id(${this.getAliasName()})`,
         value: this.id,
       },
     ].map(fa => this.prepareFilter(fa, this))
@@ -368,7 +368,7 @@ class Model {
    */
   async recreateRelationship(attr, node, attributes = {}) {
     try {
-      await this.removeRelationship(attr, node)
+      await this.removeAllRelationships(attr)
     } catch (e) {
       // nothing
     }

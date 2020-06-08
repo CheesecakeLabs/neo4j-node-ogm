@@ -368,7 +368,7 @@ class Model {
    */
   async recreateRelationship(attr, node, attributes = {}) {
     try {
-      await this.removeRelationship(attr)
+      await this.removeRelationship(attr, node)
     } catch (e) {
       // nothing
     }

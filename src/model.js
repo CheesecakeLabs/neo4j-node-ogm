@@ -247,7 +247,7 @@ class Model {
 
       const record = await this.cypher.update()
 
-      hydrate(this, record)
+      hydrate(this, record[0])
     }
   }
 

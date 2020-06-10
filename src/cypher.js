@@ -1,5 +1,4 @@
 import { getConnection } from './driver'
-import { checkWith } from './hydrate'
 
 const database = getConnection()
 const OPERATORS = [
@@ -185,34 +184,13 @@ class Cypher {
     ${this.setString}
     RETURN ${this.returnStrings.join(' , ')}`
     // console.log(stmt)
-    const session = await database.session()
-
-    let result
-    try {
-      result = await session.run(stmt)
-      result = result.records[0]
-    } catch (e) {
-      throw new Error(`Cypher ERROR: ${e.message}`)
-    }
-
-    session.close()
-    this.clean()
-    return result
+    return this.session(stmt)
   }
 
   async delete(alias, detach = false) {
     const stmt = `${this.matchs.join(' ')} ${detach ? 'DETACH' : ''} DELETE ${alias}`
     // console.log(stmt)
-    const session = await database.session()
-
-    try {
-      await session.run(stmt)
-    } catch (e) {
-      throw new Error(`Cypher ERROR: ${e.message}`)
-    }
-
-    session.close()
-    this.clean()
+    await this.session(stmt)
     return true
   }
 
@@ -225,16 +203,7 @@ class Cypher {
                   ${create ? '->' : '-'}(${relation.attr})
                   ${this.setString} RETURN ${this.returnStrings.join(' , ')}`
 
-    const session = database.session()
-    // console.log(stmt)
-    try {
-      const result = await session.run(stmt)
-      session.close()
-      this.clean()
-      return result.records
-    } catch (e) {
-      throw new Error(`Cypher ERROR: ${e.message}`)
-    }
+    return this.session(stmt)
   }
 
   async find() {
@@ -244,16 +213,22 @@ class Cypher {
       this.limit ? `LIMIT ${this.limit}` : ''
     }`
 
-    const session = database.session()
-    // console.log(stmt)
-    try {
-      const result = await session.run(stmt)
-      session.close()
-      this.clean()
-      return result.records
-    } catch (e) {
-      throw new Error(`Cypher ERROR: ${e.message}`)
-    }
+    return this.session(stmt)
+  }
+
+  session(stmt) {
+    return new Promise((resolve, reject) => {
+      const session = database.session()
+
+      session
+        .run(stmt)
+        .then(result => resolve(result.records))
+        .catch(e => reject(`Cypher ERROR: ${e.message}`))
+        .then(() => {
+          this.clean()
+          session.close()
+        })
+    })
   }
 }
 

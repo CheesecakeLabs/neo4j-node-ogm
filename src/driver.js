@@ -24,4 +24,8 @@ const getConnection = () => {
   return instance
 }
 
-export { getConnection }
+const getInstance = () => {
+  return neo4j
+}
+
+export { getConnection, getInstance }

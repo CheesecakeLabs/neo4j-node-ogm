@@ -1,10 +1,6 @@
 import { createOnlyGetter, createGetterAndSetter, convertID } from './utils'
 import { Collection } from './collection'
 
-let _WITH = []
-const setWith = with_related => {
-  _WITH = with_related
-}
 /**
  * Hydrate the model with the values of database
  *
@@ -14,7 +10,7 @@ const setWith = with_related => {
  * @param {Integer} level
  * @param {Boolean} onlyRelation
  */
-const hydrate = (model, record, level = 0, relationFieldLookup = null, previous = null) => {
+const hydrate = (model, record, with_related, level = 0, relationFieldLookup = null, previous = null) => {
   const data = {
     ...record._fields[record._fieldLookup[model.getAliasName()]],
     ...record._fields[record._fieldLookup[relationFieldLookup]],
@@ -41,7 +37,7 @@ const hydrate = (model, record, level = 0, relationFieldLookup = null, previous 
   for (const [key, field] of Object.entries(model._attributes)) {
     if (field.isModel) {
       // the information should be requested to be hydrated
-      const [found_condition] = checkWith(level, key)
+      const [found_condition] = checkWith(level, key, with_related)
       if (found_condition) {
         if (field.isArray) {
           // should rehydrate
@@ -74,6 +70,7 @@ const hydrate = (model, record, level = 0, relationFieldLookup = null, previous 
             model._values[key][model._values[`${key}_ids`].indexOf(id)] = hydrate(
               targetModel,
               record,
+              with_related,
               level + 1,
               `${model.getAliasName()}_${key}`,
               field
@@ -85,7 +82,7 @@ const hydrate = (model, record, level = 0, relationFieldLookup = null, previous 
           // console.log('hidratando object', model.getAliasName(), key, record)
           let targetModel = model._values[key] || new field.target()
           targetModel._alias = key
-          const hydrated = hydrate(targetModel, record, level + 1)
+          const hydrated = hydrate(targetModel, record, with_related, level + 1)
           // create getter and setter for that attribute inside _values
           createGetterAndSetter(model, key, field.set, field.get)
           // if not array should be linked at _values directed
@@ -110,10 +107,8 @@ const hydrate = (model, record, level = 0, relationFieldLookup = null, previous 
  * @param {String} nodeName
  * @param {Boolean} overwriteWith
  */
-const checkWith = (level, nodeName, overwriteWith) => {
+const checkWith = (level, nodeName, with_related) => {
   let ret = [false, true]
-  // by default the with_related is on this._with
-  const with_related = overwriteWith ?? _WITH
   with_related.forEach(item => {
     // found the attr named as model attribute
     if (item[level]?.replace('!', '') === nodeName) {
@@ -123,4 +118,4 @@ const checkWith = (level, nodeName, overwriteWith) => {
   return ret
 }
 
-export { hydrate, checkWith, setWith }
+export { hydrate, checkWith }

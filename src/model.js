@@ -1,7 +1,7 @@
 import { Cypher } from './cypher'
 import { Collection } from './collection'
 import { createGetterAndSetter, convertID } from './utils'
-import { hydrate, checkWith, setWith } from './hydrate'
+import { hydrate, checkWith } from './hydrate'
 
 const ORDER_BY_FUNCTIONS_ALLOWED = [
   'toUpper',
@@ -233,7 +233,7 @@ class Model {
 
       const record = await this.cypher.create(this.getCypherName())
 
-      hydrate(this, record)
+      hydrate(this, record, this._with)
     } else {
       // update
       this.cypher.addWhere({
@@ -247,7 +247,7 @@ class Model {
 
       const record = await this.cypher.update()
 
-      hydrate(this, record[0])
+      hydrate(this, record[0], this._with)
     }
   }
 
@@ -283,7 +283,7 @@ class Model {
     this.addMatchs(node, field)
     // ADD TO _WITH TO RETURN THE RELATION
     this._with = [[attr]]
-    setWith(this._with) // used on hydrate
+    // setWith(this._with) // used on hydrate
     // ADD THE ATTRIBUTES ON RELATION
     Object.entries(attributes).forEach(([key, value]) => {
       this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + key, value)
@@ -291,7 +291,7 @@ class Model {
 
     const data = await this.cypher.relate(this, field, node, create)
     data.forEach(record => {
-      hydrate(this, record)
+      hydrate(this, record, this._with)
     })
   }
 
@@ -429,7 +429,7 @@ class Model {
       const w = item.split('__')
       self._with.push(w)
     })
-    setWith(self._with)
+    // setWith(self._with)
 
     self.cypher = new Cypher()
     // self.cypher.isDistinct()
@@ -478,7 +478,7 @@ class Model {
         }
       }
 
-      result[ids.indexOf(id)] = hydrate(model, record)
+      result[ids.indexOf(id)] = hydrate(model, record, self._with)
     })
 
     return result

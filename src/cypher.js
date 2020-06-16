@@ -1,4 +1,4 @@
-import { getConnection } from './driver'
+import { getConnection, getInstance } from './driver'
 
 const database = getConnection()
 const OPERATORS = [
@@ -216,9 +216,11 @@ class Cypher {
     return this.session(stmt)
   }
 
-  session(stmt) {
+  session(stmt, mode = 'read') {
     return new Promise((resolve, reject) => {
-      const session = database.session()
+      const session = database.session({
+        defaultAccessMode: mode === 'read' ? getInstance().session.READ : getInstance().session.WRITE,
+      })
 
       session
         .run(stmt)

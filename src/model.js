@@ -297,7 +297,7 @@ class Model {
           const error = JSON.parse(e.message)
           this.errors[error.key] = error.msg
         }
-        if (value) this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + relKey, value)
+        if (value) this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + relKey, relField.set(value))
       }
     }
 

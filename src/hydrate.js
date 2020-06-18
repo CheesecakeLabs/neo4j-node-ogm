@@ -82,7 +82,14 @@ const hydrate = (model, record, with_related, level = 0, relationFieldLookup = n
           // console.log('hidratando object', model.getAliasName(), key, record)
           let targetModel = model._values[key] || new field.target()
           targetModel._alias = key
-          const hydrated = hydrate(targetModel, record, with_related, level + 1)
+          const hydrated = hydrate(
+            targetModel,
+            record,
+            with_related,
+            level + 1,
+            `${model.getAliasName()}_${key}`,
+            field
+          )
           // create getter and setter for that attribute inside _values
           createGetterAndSetter(model, key, field.set, field.get)
           // if not array should be linked at _values directed

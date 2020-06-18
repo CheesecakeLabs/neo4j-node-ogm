@@ -187,6 +187,7 @@ class Model {
   }
 
   setAttributes(create = true) {
+    this.errors = {}
     Object.entries(this._attributes).forEach(([key, field]) => {
       const defaultValue = field.hasDefaultValue(this._values[key])
       if (defaultValue) this[key] = defaultValue
@@ -200,9 +201,10 @@ class Model {
       } catch (e) {
         const error = JSON.parse(e.message)
         this.errors[error.key] = error.msg
-        throw new Error('Model invalid, check the .errors attribute')
       }
     })
+
+    if (Object.keys(this.errors).length > 0) throw new Error('Model invalid, check the .errors attribute')
   }
 
   isValid() {
@@ -283,11 +285,23 @@ class Model {
     this.addMatchs(node, field)
     // ADD TO _WITH TO RETURN THE RELATION
     this._with = [[attr]]
-    // setWith(this._with) // used on hydrate
+
     // ADD THE ATTRIBUTES ON RELATION
-    Object.entries(attributes).forEach(([key, value]) => {
-      this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + key, value)
-    })
+    if (field.attributes) {
+      this.errors = {}
+      for (const [relKey, relField] of Object.entries(field.attributes)) {
+        const value = relField.hasDefaultValue(attributes[relKey]) || attributes[relKey]
+        try {
+          relField.checkValidation(relKey, value)
+        } catch (e) {
+          const error = JSON.parse(e.message)
+          this.errors[error.key] = error.msg
+        }
+        if (value) this.cypher.addSet(this.getAliasName() + '_' + attr + '.' + relKey, value)
+      }
+    }
+
+    if (Object.keys(this.errors).length > 0) throw new Error('Relationship invalid, check the .errors attribute')
 
     const data = await this.cypher.relate(this, field, node, create)
     data.forEach(record => {

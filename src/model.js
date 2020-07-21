@@ -162,13 +162,14 @@ class Model {
     this.writeFilter(field.attr, `${node.getAliasName()}_${field.attr}`)
   }
 
-  async fetch(with_related = []) {
+  async fetch(with_related = [], state = undefined) {
     // reset alias to default
     this._alias = this._labels.join('').toLowerCase()
     // return a hydrated findAll
     return this.constructor.findAll({
       filter_attributes: [{ key: `id(${this.getAliasName()})`, value: this.id }],
       with_related,
+      state,
       parent: this,
     })
   }

@@ -59,7 +59,8 @@ const hydrate = (model, record, with_related, level = 0, relationFieldLookup = n
             let targetModel
             if (!model._values[`${key}_ids`].includes(id)) {
               model._values[`${key}_ids`].push(id)
-              targetModel = new field.target()
+              targetModel = new field.target(undefined, model._state)
+              targetModel._state = model._state
             } else {
               targetModel = model._values[key][model._values[`${key}_ids`].indexOf(id)]
             }
@@ -80,7 +81,8 @@ const hydrate = (model, record, with_related, level = 0, relationFieldLookup = n
           // should return as Object
           // hydrate the model
           // console.log('hidratando object', model.getAliasName(), key, record)
-          let targetModel = model._values[key] || new field.target()
+          let targetModel = model._values[key] || new field.target(undefined, model._state)
+          targetModel._state = model._state
           targetModel._alias = key
           const hydrated = hydrate(
             targetModel,

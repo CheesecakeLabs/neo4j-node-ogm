@@ -55,7 +55,7 @@ class Text extends Model {
 }
 
 class Role extends Model {
-  constructor (values) {
+  constructor (values, state = { language: 'en_US' }) {
     const labels = ['Role']
     const attributes = {
       key: Field.String({
@@ -72,7 +72,7 @@ class Role extends Model {
         labels: ['TRANSLATE'],
         target: Text,
         filter_relationship: {
-          language: 'en_US'
+          language: state.language
         }
       })
     }
@@ -134,6 +134,7 @@ for (const user of users.toValues()) {
 // return Collection of Nodes with your relations already filled
 const users = await User.findAll({
  with_related: ['!role__name', 'friends'] // ! = force to have the relation
+ state: { language: 'pt-BR'} // force the state inside all models
 })
 
 ```

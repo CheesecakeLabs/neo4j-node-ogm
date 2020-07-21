@@ -62,5 +62,13 @@ describe('Use Cases - 02', () => {
         })
         .then(() => done(), done)
     })
+
+    it('get all users with roles, state example', done => {
+      User.findAll({ with_related: ['role__name'], state: { language: 'pt-BR' } })
+        .then(users => {
+          expect(users.toJSON()).to.have.lengthOf.at.least(1)
+        })
+        .then(() => done(), done)
+    })
   })
 })

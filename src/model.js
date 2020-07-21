@@ -134,7 +134,7 @@ class Model {
       if (field.isModel) {
         const [found_condition, isOptional] = checkWith(level, key, this._with)
         if (found_condition) {
-          const newNode = new field.target()
+          const newNode = new field.target(undefined, node._state)
           this.cypher.modelReturnRelation(`${node.getAliasName()}_${key}`, field)
           newNode.filter_relationship = field.filter_relationship
           newNode._alias = key
@@ -417,7 +417,8 @@ class Model {
   static async findAll(config = {}) {
     let self
     if (!config.parent) {
-      self = new this()
+      self = new this(undefined, config.state)
+      self._state = config.state
     } else {
       self = config.parent
       self.parent = true
@@ -435,6 +436,7 @@ class Model {
         skip: '',
         limit: '',
         optional: true,
+        state: undefined,
       },
       config
     )
@@ -478,7 +480,8 @@ class Model {
     const result = new Collection()
     const ids = []
     data.forEach(record => {
-      let model = new this()
+      let model = new this(undefined, config.state)
+      model._state = config.state
       const main = record._fields[record._fieldLookup[model.getAliasName()]]
       const id = convertID(main.id)
 

@@ -33,7 +33,7 @@ const getEnv = () => {
     NEO4J_HOST = 'localhost',
     NEO4J_PORT = '7687',
     NEO4J_USERNAME = 'neo4j',
-    NEO4J_PASSWORD = 'neo4j',
+    NEO4J_PASSWORD = 'letmein',
     NEO4J_ENTERPRISE,
     NEO4J_DATABASE = 'neo4j',
   } = process.env

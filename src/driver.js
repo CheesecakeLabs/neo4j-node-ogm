@@ -59,7 +59,7 @@ const getEnv = () => {
     NEO4J_LOGGING_LEVEL: 'logging',
   }
 
-  Object.keys(settings).forEach((setting) => {
+  Object.keys(settings).forEach(setting => {
     if (process.env.hasOwnProperty(setting)) {
       const key = settings[setting]
       let value = process.env[setting]
@@ -77,8 +77,4 @@ const getEnv = () => {
   return { connection_string, NEO4J_USERNAME, NEO4J_PASSWORD, enterprise, NEO4J_DATABASE, config }
 }
 
-const getInstance = () => {
-  return neo4j
-}
-
-export { getConnection, getInstance }
+export { getConnection }

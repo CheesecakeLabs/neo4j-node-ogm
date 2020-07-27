@@ -161,19 +161,8 @@ class Cypher {
     this.writeSets(' , ')
     const stmt = `CREATE (${nodeAlias}) ${this.setString} RETURN ${this.returnStrings.join(' , ')}`
     // console.log(stmt)
-    const session = await database.session()
-
-    let result
-    try {
-      result = await session.run(stmt)
-      result = result.records[0]
-    } catch (e) {
-      throw new Error(`Cypher ERROR: ${e.message}`)
-    }
-
-    session.close()
-    this.clean()
-    return result
+    const records = await this.session(stmt, 'write')
+    return records[0]
   }
 
   async update() {
@@ -184,13 +173,13 @@ class Cypher {
     ${this.setString}
     RETURN ${this.returnStrings.join(' , ')}`
     // console.log(stmt)
-    return this.session(stmt)
+    return this.session(stmt, 'write')
   }
 
   async delete(alias, detach = false) {
     const stmt = `${this.matchs.join(' ')} ${detach ? 'DETACH' : ''} DELETE ${alias}`
     // console.log(stmt)
-    await this.session(stmt)
+    await this.session(stmt, 'write')
     return true
   }
 
@@ -203,7 +192,7 @@ class Cypher {
                   ${create ? '->' : '-'}(${relation.attr})
                   ${this.setString} RETURN ${this.returnStrings.join(' , ')}`
 
-    return this.session(stmt)
+    return this.session(stmt, 'write')
   }
 
   async find() {

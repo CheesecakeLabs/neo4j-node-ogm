@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { User, Role, Text, Company, Build } from './models'
-import { getConnection } from '../src'
+import { getConnection, getInstance } from '../src/driver'
 
 describe('Use Cases - 01', () => {
   let user1
@@ -11,7 +11,7 @@ describe('Use Cases - 01', () => {
     it('should clean the information on database', done => {
       // CLEAN DATABASE
       const database = getConnection()
-      const session = database.session()
+      const session = database.session({ defaultAccessMode: getInstance().session.WRITE })
       session.run('MATCH (all) DETACH DELETE all').then(() => {
         session.close()
         done()

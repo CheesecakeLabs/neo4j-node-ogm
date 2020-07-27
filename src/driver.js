@@ -77,4 +77,8 @@ const getEnv = () => {
   return { connection_string, NEO4J_USERNAME, NEO4J_PASSWORD, enterprise, NEO4J_DATABASE, config }
 }
 
-export { getConnection }
+const getInstance = () => {
+  return neo4j
+}
+
+export { getConnection, getInstance }

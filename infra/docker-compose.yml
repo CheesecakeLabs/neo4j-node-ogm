@@ -2,7 +2,7 @@ version: '3.6'
 
 services:
   neo4j:
-    image: neo4j:4.0.0
+    image: neo4j:4.1.0
     volumes:
       - './data:/data:rw'
     ports:

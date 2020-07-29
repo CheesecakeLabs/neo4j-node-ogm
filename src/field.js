@@ -52,7 +52,7 @@ class Field {
    * @param {String} value
    */
   hasDefaultValue(value) {
-    if (!value && this.default) {
+    if (value === undefined && this.default) {
       return this.default instanceof Function ? this.default() : this.default
     }
 
@@ -84,7 +84,7 @@ class Field {
       throw new Error(`{ "key": "${key}", "msg": "Field has less than ${this.min_length} characters" }`)
     }
     // required
-    if (this.required && !value) {
+    if (this.required && value === undefined) {
       throw new Error(`{ "key": "${key}", "msg": "Field is required" }`)
     }
 

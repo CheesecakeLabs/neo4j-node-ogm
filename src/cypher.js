@@ -73,7 +73,7 @@ class Cypher {
   }
 
   addSet(attr, value) {
-    if (value) {
+    if (value !== undefined) {
       this.sets.push(`${attr} = '${value}'`)
     }
   }

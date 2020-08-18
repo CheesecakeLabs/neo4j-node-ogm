@@ -91,7 +91,7 @@ class Cypher {
     switch (operator) {
       case 'IN':
         if (!Array.isArray(value)) throw new Error('on IN operator, value must be an Array')
-        value = value.map(v => (Number.isInteger(v) ? v : `'${v}'`))
+        value = value.map((v) => (Number.isInteger(v) ? v : `'${v}'`))
         whereString = `${attr} ${operator} [${value.join(',')}]`
         break
       default:
@@ -213,8 +213,8 @@ class Cypher {
 
       session
         .run(stmt)
-        .then(result => resolve(result.records))
-        .catch(e => reject(`Cypher ERROR: ${e.message}`))
+        .then((result) => resolve(result.records))
+        .catch((e) => reject(`Cypher ERROR: ${e.message}`))
         .then(() => {
           this.clean()
           session.close()

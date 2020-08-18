@@ -9,7 +9,7 @@ class Field {
    */
   constructor(config = {}) {
     // remove undefined configs to be overwrite by default config
-    Object.keys(config).forEach(key => {
+    Object.keys(config).forEach((key) => {
       config[key] === undefined && delete config[key]
     })
     // create default configs
@@ -27,8 +27,8 @@ class Field {
         max_length: false,
         attributes: false,
         labels: [],
-        set: value => value,
-        get: value => value,
+        set: (value) => value,
+        get: (value) => value,
       },
       config
     )
@@ -51,12 +51,16 @@ class Field {
    *
    * @param {String} value
    */
-  hasDefaultValue(value) {
-    if (value === undefined && this.default) {
+  getDefaultValue(value) {
+    if (value !== undefined) {
+      return value
+    }
+
+    if (this.default !== undefined) {
       return this.default instanceof Function ? this.default() : this.default
     }
 
-    return false
+    return undefined
   }
 
   /**
@@ -123,7 +127,7 @@ class Field {
     const field = new this({
       type: 'integer',
       set: obj.set,
-      get: obj.get,
+      get: (value) => parseInt(value, 10),
       required: obj.required,
       default: obj.default,
     })
@@ -141,7 +145,7 @@ class Field {
     const field = new this({
       type: 'float',
       set: obj.set,
-      get: obj.get,
+      get: (value) => parseFloat(value, 10),
       required: obj.required,
       default: obj.default,
     })
@@ -160,7 +164,7 @@ class Field {
     const field = new this({
       type: 'hash',
       required: obj.required,
-      set: value => bcrypt.hashSync(`${value}`, salt),
+      set: (value) => bcrypt.hashSync(`${value}`, salt),
       checkHash: (value, saved) => bcrypt.compareSync(`${value}`, `${saved}`),
     })
     return field
@@ -178,8 +182,8 @@ class Field {
       type: 'json',
       required: obj.required,
       default: obj.default,
-      set: value => JSON.stringify(value),
-      get: value => JSON.parse(value),
+      set: (value) => JSON.stringify(value),
+      get: (value) => JSON.parse(value),
     })
     return field
   }
@@ -195,8 +199,8 @@ class Field {
     const field = new this({
       type: 'boolean',
       default: obj.default,
-      set: value => (value === true || value === 'true' ? 'true' : 'false'),
-      get: value => (value === true || value === 'true' ? true : false),
+      set: (value) => (value === true || value === 'true' ? 'true' : 'false'),
+      get: (value) => (value === true || value === 'true' ? true : false),
     })
     return field
   }
@@ -213,8 +217,8 @@ class Field {
       type: 'datetime',
       required: obj.required,
       default: obj.default,
-      set: objDate => objDate.toISOString(),
-      get: value => parseISOString(value),
+      set: (objDate) => objDate.toISOString(),
+      get: (value) => parseISOString(value),
     })
     return field
   }

@@ -70,7 +70,7 @@ class Model {
           break
         case 'relationships':
           if (model._values[key]) {
-            data[key] = Object.values(model._values[key]).map(item => this.retriveInfo(item, field))
+            data[key] = Object.values(model._values[key]).map((item) => this.retriveInfo(item, field))
           }
           break
         default:
@@ -104,7 +104,7 @@ class Model {
   writeFilter(forNode, relationAlias = undefined) {
     // FILTERS WITH LOCATION
     this.filter_attributes
-      .filter(item => item.for === forNode || item.for === relationAlias)
+      .filter((item) => item.for === forNode || item.for === relationAlias)
       .forEach(({ attr, operator, value }) => {
         this.cypher.addWhere({ attr, operator, value })
       })
@@ -129,7 +129,7 @@ class Model {
 
     this.writeFilter(node.getAliasName(), `${relation?.previousNode?.getAliasName()}_${relation?.previousAlias}`)
 
-    Object.keys(node._attributes).forEach(key => {
+    Object.keys(node._attributes).forEach((key) => {
       const field = node._attributes[key]
       if (field.isModel) {
         const [found_condition, isOptional] = checkWith(level, key, this._with)
@@ -181,7 +181,7 @@ class Model {
         key: `id(${this.getAliasName()})`,
         value: this.id,
       },
-    ].map(fa => this.prepareFilter(fa, this))
+    ].map((fa) => this.prepareFilter(fa, this))
     this.doMatchs(this, false)
 
     return this.cypher.delete(this.getAliasName(), detach)
@@ -190,8 +190,7 @@ class Model {
   setAttributes(create = true) {
     this.errors = {}
     Object.entries(this._attributes).forEach(([key, field]) => {
-      const defaultValue = field.hasDefaultValue(this._values[key])
-      if (defaultValue) this[key] = defaultValue
+      this[key] = field.getDefaultValue(this._values[key])
       try {
         this._values[key] = field.checkValidation(key, this._values[key])
         if (field.isModel === false) {
@@ -213,7 +212,7 @@ class Model {
     this.errors = {}
 
     Object.entries(this._attributes).forEach(([key, field]) => {
-      const data = field.hasDefaultValue(this._values[key]) || this._values[key]
+      const data = field.getDefaultValue(this._values[key])
       try {
         field.checkValidation(key, data)
       } catch (e) {
@@ -274,7 +273,7 @@ class Model {
         key: `id(${attr})`,
         value: node.id,
       },
-    ].map(fa => this.prepareFilter(fa, this))
+    ].map((fa) => this.prepareFilter(fa, this))
     this.doMatchs(this)
 
     // CREATE THE RELATION FOR THIS ATTR
@@ -291,7 +290,7 @@ class Model {
     if (field.attributes) {
       this.errors = {}
       for (const [relKey, relField] of Object.entries(field.attributes)) {
-        const value = relField.hasDefaultValue(attributes[relKey]) || attributes[relKey]
+        const value = relField.getDefaultValue(attributes[relKey])
         try {
           relField.checkValidation(relKey, value)
         } catch (e) {
@@ -306,7 +305,7 @@ class Model {
     if (Object.keys(this.errors).length > 0) throw new Error('Relationship invalid, check the .errors attribute')
 
     const data = await this.cypher.relate(this, field, node, create)
-    data.forEach(record => {
+    data.forEach((record) => {
       hydrate(this, record, this._with)
     })
   }
@@ -346,7 +345,7 @@ class Model {
         key: `id(${this.getAliasName()})`,
         value: this.id,
       },
-    ].map(fa => this.prepareFilter(fa, this))
+    ].map((fa) => this.prepareFilter(fa, this))
     this.doMatchs(this)
     return this.cypher.delete(`${this.getAliasName()}_${attr}`)
   }
@@ -368,7 +367,7 @@ class Model {
         key: `id(${attr})`,
         value: node.id,
       },
-    ].map(fa => this.prepareFilter(fa, this))
+    ].map((fa) => this.prepareFilter(fa, this))
 
     this.doMatchs(this)
 
@@ -426,7 +425,7 @@ class Model {
       self.parent = true
     }
 
-    Object.keys(config).forEach(key => {
+    Object.keys(config).forEach((key) => {
       config[key] === undefined && delete config[key]
     })
     config = Object.assign(
@@ -443,7 +442,7 @@ class Model {
       config
     )
 
-    config.with_related.forEach(item => {
+    config.with_related.forEach((item) => {
       const w = item.split('__')
       self._with.push(w)
     })
@@ -454,9 +453,9 @@ class Model {
     self.cypher.optional = config.optional
     self.cypher.skip = config.skip
     self.cypher.limit = config.limit
-    self.filter_attributes = config.filter_attributes.map(fa => self.prepareFilter(fa, self))
+    self.filter_attributes = config.filter_attributes.map((fa) => self.prepareFilter(fa, self))
 
-    self.order_by = config.order_by.map(ob => {
+    self.order_by = config.order_by.map((ob) => {
       const isCypherFunction = /.+\(.+\)/.test(ob.key)
       if (isCypherFunction) {
         const regExp = /(.+)\(([^)]+)\)/
@@ -481,7 +480,7 @@ class Model {
 
     const result = new Collection()
     const ids = []
-    data.forEach(record => {
+    data.forEach((record) => {
       let model = new this(undefined, config.state)
       model._state = config.state
       const main = record._fields[record._fieldLookup[model.getAliasName()]]

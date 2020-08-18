@@ -46,7 +46,7 @@ const hydrate = (model, record, with_related, level = 0, relationFieldLookup = n
           const next = record._fields[record._fieldLookup[key]]
 
           // create a empty Collection
-          if (model._values[key] === undefined) {
+          if (!model._values[key]) {
             // create getter and setter for that attribute inside _values
             createGetterAndSetter(model, key, field.set, field.get)
             model._values[key] = new Collection() // this is the result
@@ -118,7 +118,7 @@ const hydrate = (model, record, with_related, level = 0, relationFieldLookup = n
  */
 const checkWith = (level, nodeName, with_related) => {
   let ret = [false, true]
-  with_related.forEach(item => {
+  with_related.forEach((item) => {
     // found the attr named as model attribute
     if (item[level]?.replace('!', '') === nodeName) {
       ret = [true, !(item[level].indexOf('!') > -1)] // [found_condition, isOptional]

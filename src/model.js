@@ -190,9 +190,9 @@ class Model {
   setAttributes(create = true) {
     this.errors = {}
     Object.entries(this._attributes).forEach(([key, field]) => {
-      this[key] = field.getDefaultValue(this._values[key])
+      this._values[key] = field.getDefaultValue(this._values[key])
       try {
-        this._values[key] = field.checkValidation(key, this._values[key])
+        field.checkValidation(key, this._values[key])
         if (field.isModel === false) {
           this.cypher.addSet(this.getAliasName() + '.' + key, this._values[key])
         } else if (create) {
@@ -212,9 +212,8 @@ class Model {
     this.errors = {}
 
     Object.entries(this._attributes).forEach(([key, field]) => {
-      const data = field.getDefaultValue(this._values[key])
       try {
-        field.checkValidation(key, data)
+        field.checkValidation(key, field.getDefaultValue(this._values[key]))
       } catch (e) {
         const error = JSON.parse(e.message)
         this.errors[error.key] = error.msg

@@ -8,7 +8,7 @@ describe('Use Cases - 01', () => {
   let build1
   let build2
   describe('::clean database', () => {
-    it('should clean the information on database', done => {
+    it('should clean the information on database', (done) => {
       // CLEAN DATABASE
       const database = getConnection()
       const session = database.session({ defaultAccessMode: getInstance().session.WRITE })
@@ -19,7 +19,7 @@ describe('Use Cases - 01', () => {
     })
   })
   describe('::create', () => {
-    it('create a simple user', done => {
+    it('create a simple user', (done) => {
       const user = new User({
         name: 'User UseCase Test',
         language: 'pt_BR',
@@ -55,7 +55,7 @@ describe('Use Cases - 01', () => {
         .then(() => done(), done)
     })
 
-    it('throw required field', done => {
+    it('throw required field', (done) => {
       const user = new User({
         name: 'User without email',
       })
@@ -65,7 +65,7 @@ describe('Use Cases - 01', () => {
       })
     })
 
-    it('isValid function', done => {
+    it('isValid function', (done) => {
       const user = new User({
         language: 'dsadasdasdas',
       })
@@ -74,7 +74,7 @@ describe('Use Cases - 01', () => {
       done()
     })
 
-    it('throw valid field', done => {
+    it('throw valid field', (done) => {
       const user = new User({
         name: 'User without valid language',
         email: 'email@test.com',
@@ -86,7 +86,7 @@ describe('Use Cases - 01', () => {
       })
     })
 
-    it('throw max_length field', done => {
+    it('throw max_length field', (done) => {
       const user = new User({
         name: 'User max_length',
         email:
@@ -98,7 +98,7 @@ describe('Use Cases - 01', () => {
       })
     })
 
-    it('create a simple role', done => {
+    it('create a simple role', (done) => {
       const role = new Role({
         key: 'admin',
       })
@@ -111,7 +111,7 @@ describe('Use Cases - 01', () => {
         .then(() => done(), done)
     })
 
-    it('create a simple company', done => {
+    it('create a simple company', (done) => {
       const company = new Company({
         name: 'company 1',
       })
@@ -125,7 +125,7 @@ describe('Use Cases - 01', () => {
         .then(() => done(), done)
     })
 
-    it('create a simple build 1', done => {
+    it('create a simple build 1', (done) => {
       const build = new Build({
         name: 'build 1',
       })
@@ -139,7 +139,7 @@ describe('Use Cases - 01', () => {
         .then(() => done(), done)
     })
 
-    it('create a simple build 2', done => {
+    it('create a simple build 2', (done) => {
       const build = new Build({
         name: 'build 2',
       })
@@ -153,7 +153,7 @@ describe('Use Cases - 01', () => {
         .then(() => done(), done)
     })
 
-    it('create 2 simple text', done => {
+    it('create 2 simple text', (done) => {
       const text1 = new Text({
         value: 'Administrator',
       })
@@ -173,7 +173,7 @@ describe('Use Cases - 01', () => {
         .then(() => done(), done)
     })
 
-    it('relating 2 levels', done => {
+    it('relating 2 levels', (done) => {
       user1.createRelationship('companies', company1).then(() => {
         company1.createRelationship('builds', build1, { purchased_in: 'april/2020' }).then(() => {
           company1

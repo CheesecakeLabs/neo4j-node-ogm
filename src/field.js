@@ -22,7 +22,7 @@ class Field {
         valid: false,
         filter_relationship: false,
         target: false,
-        default: false,
+        default: undefined,
         min_length: false,
         max_length: false,
         attributes: false,

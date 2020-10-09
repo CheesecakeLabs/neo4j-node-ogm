@@ -141,7 +141,7 @@ class Cypher {
   }
 
   modelReturn(alias, model) {
-    let returnString = `${alias} {`
+    let returnString = model.collectFirst ? `collect(${alias} {` : `${alias} {`
     const attrs = []
 
     attrs.push(`id:id(${alias})`)
@@ -151,8 +151,8 @@ class Cypher {
         attrs.push(`.${attr}`)
       }
     }
-
-    returnString += `${attrs.join(', ')} }`
+    returnString += attrs.join(', ')
+    returnString += model.collectFirst ? ` })[0] as ${alias}` : ` }`
 
     this.returnStrings.push(returnString)
   }
@@ -210,7 +210,7 @@ class Cypher {
       const session = database.session({
         defaultAccessMode: mode === 'read' ? getInstance().session.READ : getInstance().session.WRITE,
       })
-
+      // console.log('stmt', stmt)
       session
         .run(stmt)
         .then((result) => resolve(result.records))

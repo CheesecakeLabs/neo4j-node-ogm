@@ -139,6 +139,7 @@ class Model {
           newNode.filter_relationship = field.filter_relationship
           newNode._alias = key
           newNode.isOptional = isOptional
+          newNode.collectFirst = !field.isArray
           this.doMatchs(
             newNode,
             {

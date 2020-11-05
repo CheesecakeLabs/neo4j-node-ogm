@@ -84,7 +84,7 @@ class Cypher {
     }
   }
 
-  addWhere({ attr, operator, value }) {
+  addWhere({ attr, operator, value, not = false }) {
     let whereString
     if (!OPERATORS.includes(operator)) operator = '='
 
@@ -92,10 +92,10 @@ class Cypher {
       case 'IN':
         if (!Array.isArray(value)) throw new Error('on IN operator, value must be an Array')
         value = value.map((v) => (Number.isInteger(v) ? v : `'${v}'`))
-        whereString = `${attr} ${operator} [${value.join(',')}]`
+        whereString = `${not ? 'NOT' : ''} ${attr} ${operator} [${value.join(',')}]`
         break
       default:
-        whereString = `${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
+        whereString = `${not ? 'NOT' : ''} ${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
     }
 
     this.wheres.push(whereString)

@@ -159,7 +159,7 @@ const users = await User.findAll({
 ```
 //return Collection of Nodes with your relations already filled
 const users = User.findBy([
-  { key: 'name', operator: 'STARTS WITH', value: 'Na'},
+  { key: 'name', operator: 'STARTS WITH', value: 'Na', not: true}, //all users that name NOT starts with 'Na'
   { key: 'language', operator: 'IN', value: ['pt_BR', 'en_US']}
   { key: 'role.key', value: 'admin'}
 ], {
@@ -298,6 +298,7 @@ Fields type:
 | order_by            | Array of Objects        | Ordenation of the results , direction default is `ASC`                                                                                           | `order_by: [{ key: 'email', direction: 'DESC' }, { key: 'role.name' }]` |
 | filter_node         | Object                  | This object is used to filter(where) at relations and will be applied at node                                                                    | `filter_node: { name: 'Natam' }`                                        |
 | filter_relationship | Object                  | This object is used to filter(where) at relations and will be applied at relationship                                                            | `filter_relationship: { language: 'en_US' }`                            |
+| filter_attributes | Array                  | This array of object is used to filter(where) one collection on FindBy/FindAll/... default operator is `=` and the key can be one relationship (`model1Attribute_model2` is the auto generated name for a relationship)                                                         | `[{ key: 'model.attr', operator: 'STARTS WITH', value: 'Na', not: true }]`                            |
 | get                 | Function                | A function to override the get attribute of the Model                                                                                            | `` get: (value) => { return `key-${value}` } ``                         |
 | labels              | Array                   | This array can be at Model (starts with \_ ex: \_labels) or a Field Relationship to define the `:LABELS` at neo4j                                | `labels = ['Role']`                                                     |
 | min_length          | Integer                 | Define the min length of caracteres of the field                                                                                                 | `min_length: 3`                                                         |

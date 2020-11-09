@@ -74,7 +74,7 @@ class Cypher {
 
   addSet(attr, value) {
     if (value !== undefined) {
-      this.sets.push(`${attr} = '${value}'`)
+      this.sets.push(`${attr} = '${typeof value === "string" ? value.replace(/'/g, "\\'") : value}'`)
     }
   }
 

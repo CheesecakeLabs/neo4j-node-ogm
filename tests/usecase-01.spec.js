@@ -25,6 +25,7 @@ describe('Use Cases - 01', () => {
         language: 'pt_BR',
         password: 12345,
         active: true,
+        created_at: new Date(),
       })
       user.email = 'email@domain.com'
 

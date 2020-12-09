@@ -73,8 +73,15 @@ class Cypher {
   }
 
   addSet(attr, value) {
-    if (value !== undefined) {
-      this.sets.push(`${attr} = '${typeof value === "string" ? value.replace(/'/g, "\\'") : value}'`)
+    switch(true){
+      case value instanceof Date:
+        this.sets.push(`${attr} = '${value.toISOString()}'`)
+        break
+      case typeof value === "undefined":
+        //IGNORE
+        break
+      default:
+        this.sets.push(`${attr} = '${typeof value === "string" ? value.replace(/'/g, "\\'") : value}'`)
     }
   }
 

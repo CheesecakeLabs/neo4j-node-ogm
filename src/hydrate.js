@@ -102,7 +102,7 @@ const hydrate = (model, record, with_related, level = 0, relationFieldLookup = n
       // create getter and setter for that attribute inside _values
       createGetterAndSetter(model, key, field.set, field.get, field.checkHash)
       // just a value of the model
-      if (!undefined) model._values[key] = data[key]
+      if (data[key] !== undefined) model._values[key] = data[key]
     }
   }
 

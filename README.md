@@ -35,7 +35,7 @@ NEO4J_LOGGING_LEVEL
 
 At first, you can only do raw cyphers
 
-```
+```js
 import { getConnection } from 'neo4j-node-ogm'
 
 const database = getConnection()
@@ -56,7 +56,7 @@ try {
 
 #### Modeling
 
-```
+```js
 import { Model, Field } from 'neo4j-node-ogm'
 
 class Text extends Model {
@@ -130,7 +130,7 @@ class User extends Model {
 
 #### findAll
 
-```
+```js
 // return Collection of Nodes by default relations are not populated
 const users = await User.findAll() // the return is a Object
 
@@ -145,7 +145,7 @@ for (const user of users.toValues()) {
 
 #### findAll with relations
 
-```
+```js
 // return Collection of Nodes with your relations already filled
 const users = await User.findAll({
  with_related: ['!role__name', 'friends'] // ! = force to have the relation
@@ -156,7 +156,7 @@ const users = await User.findAll({
 
 #### findBy
 
-```
+```js
 //return Collection of Nodes with your relations already filled
 const users = User.findBy([
   { key: 'name', operator: 'STARTS WITH', value: 'Na', not: true}, //all users that name NOT starts with 'Na'
@@ -169,7 +169,7 @@ const users = User.findBy([
 
 #### Creating
 
-```
+```js
 const user = new User({
   email: 'natam.oliveira@ckl.io'
 })
@@ -183,7 +183,7 @@ await user.save()
 
 #### Updating
 
-```
+```js
 const user = await User.findByID(100) //return Node
 if(!user) return 'User not found'
 user.name = 'Natam Oliveira 2'
@@ -192,7 +192,7 @@ await user.save()
 
 #### Deleting Node
 
-```
+```js
 const user = await User.findByID(100) //return Node
 if(user){
   await user.delete()
@@ -201,7 +201,7 @@ if(user){
 
 #### Deleting Collection
 
-```
+```js
 const users = await User.findAll() //return Collection
 await users.deleteAll()
 ```

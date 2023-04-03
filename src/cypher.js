@@ -16,6 +16,8 @@ const OPERATORS = [
   'CONTAINS',
   'EXISTS',
   'IN',
+  'OR',
+  'AND',
 ]
 
 class Cypher {
@@ -91,21 +93,24 @@ class Cypher {
     }
   }
 
-  addWhere({ attr, operator, value, not = false }) {
-    let whereString
+  parseWhereToString({ attr, operator, value, not = false, filters = [] }) {
     if (!OPERATORS.includes(operator)) operator = '='
-
     switch (operator) {
       case 'IN':
         if (!Array.isArray(value)) throw new Error('on IN operator, value must be an Array')
         value = value.map((v) => (Number.isInteger(v) ? v : `'${v}'`))
-        whereString = `${not ? 'NOT' : ''} ${attr} ${operator} [${value.join(',')}]`
-        break
+        return `${not ? 'NOT' : ''} ${attr} ${operator} [${value.join(',')}]`
+      case 'AND':
+        return `(${filters.map(filter => this.parseWhereToString(filter)).join(' AND ')})`
+      case 'OR':
+        return `(${filters.map(filter => this.parseWhereToString(filter)).join(' OR ')})`
       default:
-        whereString = `${not ? 'NOT' : ''} ${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
+        return `${not ? 'NOT' : ''} ${attr} ${operator} ${Number.isInteger(value) ? value : `'${value}'`}`
     }
+  }
 
-    this.wheres.push(whereString)
+  addWhere({ attr, operator, value, filters, not = false }) {
+    this.wheres.push(this.parseWhereToString({ attr, operator, value, filters, not }))
   }
 
   writeWhere() {

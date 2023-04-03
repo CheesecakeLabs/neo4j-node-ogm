@@ -204,9 +204,9 @@ class Cypher {
 
   find() {
     const stmt = `${this.matchs.join(' ')} ${this.setString}
-                  RETURN ${this.distinct} ${this.returnStrings.join(' , ')}
+                  RETURN ${this.count ? `COUNT(${this.count})` : `${this.distinct} ${this.returnStrings.join(' , ')}
                   ${this.writeOrderBy()} ${this.skip ? `SKIP ${this.skip}` : ''} ${
-      this.limit ? `LIMIT ${this.limit}` : ''
+      this.limit ? `LIMIT ${this.limit}` : ''}`
     }`
 
     return this.session(stmt)

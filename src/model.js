@@ -2,6 +2,7 @@ import { Cypher } from './cypher'
 import { Collection } from './collection'
 import { createGetterAndSetter, convertID } from './utils'
 import { hydrate, checkWith } from './hydrate'
+import { Field } from './field'
 
 const ORDER_BY_FUNCTIONS_ALLOWED = [
   'toUpper',
@@ -440,6 +441,7 @@ class Model {
         order_by: [],
         skip: '',
         limit: '',
+        count: '',
         optional: true,
         state: undefined,
       },
@@ -457,6 +459,7 @@ class Model {
     self.cypher.optional = config.optional
     self.cypher.skip = config.skip
     self.cypher.limit = config.limit
+    self.cypher.count = config.count
     self.filter_attributes = config.filter_attributes.map((fa) => self.prepareFilter(fa, self))
 
     self.order_by = config.order_by.map((ob) => {

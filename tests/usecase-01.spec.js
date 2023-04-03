@@ -31,7 +31,7 @@ describe('Use Cases - 01', () => {
       user.email = 'email@domain.com'
 
       const user2 = new User({
-        name: 'User UseCase Test',
+        name: "'User special char test",
         email: 'email2@domain.com',
         language: 'pt_BR',
         password: 12345,

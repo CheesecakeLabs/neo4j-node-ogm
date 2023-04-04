@@ -22,6 +22,9 @@ describe('Use Cases - 04', () => {
         })
         .then(() => done(), done)
     })
+    it('delete user toString', () => {
+      expect(user.delete(true).toString()).to.equal(`MATCH (user:User)  WHERE  id(user) = ${user.id} DETACH DELETE user`)
+    })
   })
   describe('::checking deleted node', () => {
     it('findByID to not return deleted user', done => {

@@ -104,9 +104,9 @@ class Model {
   writeFilter(forNode, relationAlias = undefined) {
     // FILTERS WITH LOCATION
     this.filter_attributes
-      .filter((item) => item.for === forNode || item.for === relationAlias)
-      .forEach(({ attr, operator, value, filters }) => {
-        this.cypher.addWhere({ attr, operator, value, filters })
+      .filter((item) => item.for === forNode || item.for === relationAlias || item.$and || item.$or)
+      .forEach(({ attr, operator, value, $and, $or }) => {
+        this.cypher.addWhere({ attr, operator, value, $and, $or })
       })
     this.cypher.matchs.push(this.cypher.writeWhere())
   }
@@ -509,9 +509,12 @@ class Model {
 
   prepareFilter(fa, model) {
     if (!fa) return false
-    if (fa.filters) {
-      fa.filters.forEach(filter => this.prepareFilter(filter, model))
-      fa.for = model.getAliasName()
+    if (fa.$and) {
+      fa.$and.forEach(filter => this.prepareFilter(filter, model))
+      return fa
+    }
+    if (fa.$or) {
+      fa.$or.forEach(filter => this.prepareFilter(filter, model))
       return fa
     }
     const isCypherFunction = /.+\(.+\)/.test(fa.key)

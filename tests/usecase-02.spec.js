@@ -49,9 +49,9 @@ describe('Use Cases - 02', () => {
     
     it('get filtering with nested filters', done => {
       User.findAll({
-        filter_attributes: [
-          { operator: 'OR', filters: [
-            { operator: 'AND', filters: [
+        filter_attributes: [{
+          $or: [
+            { $and: [
               { key: 'active', value: 'true'},
               { key: 'email', value: 'email@domain.com'},
             ]},

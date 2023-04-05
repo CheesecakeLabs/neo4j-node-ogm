@@ -61,8 +61,7 @@ describe('Use Cases - 01', () => {
       const user = new User({
         email: 'email@wow.com',
       })
-      expect(user.save().toString()).to.contain(`CREATE (user:User) SET user.email = \'email@wow.com\' , user.created_at = \'${new Date().toISOString().slice(0,20)}`)
-      expect(user.save().toString()).to.contain(`\' RETURN user {id:id(user), .name, .language, .email, .active, .password, .created_at }`)
+      expect(user.save().toString()).to.contain(`CREATE (user:User) SET user.email = $param1 , user.created_at = $param2 RETURN user {id:id(user), .name, .language, .email, .active, .password, .created_at }`)
     })
 
     it('throw required field', (done) => {

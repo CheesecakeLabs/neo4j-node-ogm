@@ -52,7 +52,7 @@ class Cypher {
         filterRelationship =
           '{' +
           Object.entries(targetModel.filter_relationship)
-            .map(([key, value]) => `${key}:'${value}'`)
+            .map(([key, value]) => `${key}:${this.addParameter(value)}`)
             .join(', ') +
           '}'
       }
@@ -96,11 +96,11 @@ class Cypher {
     if ($and.length) return `(${$and.map(filter => this.parseWhereToString(filter)).join(' AND ')})`
     if ($or.length) return `(${$or.map(filter => this.parseWhereToString(filter)).join(' OR ')})`
     if (!OPERATORS.includes(operator)) operator = '='
+    if (value === undefined) return 'true'
     if (operator === 'IN' && !Array.isArray(value)) {
       throw new Error('on IN operator, value must be an Array')
     }
     return `${not ? 'NOT' : ''} ${attr} ${operator} ${this.addParameter(value)}`
-    }
   }
 
   addParameter(value) {

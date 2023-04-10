@@ -510,11 +510,11 @@ class Model {
   prepareFilter(fa, model) {
     if (!fa) return false
     if (fa.$and) {
-      fa = fa.$and.map(filter => this.prepareFilter(filter, model))
+      fa.$and = fa.$and.map(filter => this.prepareFilter(filter, model))
       return fa
     }
     if (fa.$or) {
-      fa = fa.$or.map(filter => this.prepareFilter(filter, model))
+      fa.$or = fa.$or.map(filter => this.prepareFilter(filter, model))
       return fa
     }
     const isCypherFunction = /.+\(.+\)/.test(fa.key)

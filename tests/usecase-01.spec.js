@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { User, Role, Text, Company, Build } from './models'
 import { getConnection, getInstance } from '../src/driver'
+import { Cypher } from '../src/cypher'
 
 describe('Use Cases - 01', () => {
   let user1
@@ -54,6 +55,14 @@ describe('Use Cases - 01', () => {
           expect(user.isValid()).to.be.equal(true)
         })
         .then(() => done(), done)
+    })
+
+    it('create toString', () => {
+      const user = new User({
+        email: 'email@wow.com',
+      })
+      expect(user.save().toString()).to.contain(`CREATE (user:User) SET user.email = \'email@wow.com\' , user.created_at = \'${new Date().toISOString().slice(0,20)}`)
+      expect(user.save().toString()).to.contain(`\' RETURN user {id:id(user), .name, .language, .email, .active, .password, .created_at }`)
     })
 
     it('throw required field', (done) => {

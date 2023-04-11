@@ -164,30 +164,29 @@ class Cypher {
     this.returnStrings.push(returnString)
   }
 
-  async create(nodeAlias) {
+  create(nodeAlias) {
     this.writeSets(' , ')
     const stmt = `CREATE (${nodeAlias}) ${this.setString} RETURN ${this.returnStrings.join(' , ')}`
-    // console.log(stmt)
-    const records = await this.session(stmt, 'write')
-    return records[0]
+    return new SessionPromise(stmt, (acc) =>
+      this.session(stmt, 'write').then(records => acc(records[0]))
+    )
   }
 
-  async update() {
+  update() {
     this.writeWhere()
     this.writeSets(' , ')
     const stmt = `
     ${this.matchs.join(' ')}
     ${this.setString}
     RETURN ${this.returnStrings.join(' , ')}`
-    // console.log(stmt)
     return this.session(stmt, 'write')
   }
 
-  async delete(alias, detach = false) {
+  delete(alias, detach = false) {
     const stmt = `${this.matchs.join(' ')} ${detach ? 'DETACH' : ''} DELETE ${alias}`
-    // console.log(stmt)
-    await this.session(stmt, 'write')
-    return true
+    return new SessionPromise(stmt, (acc) =>
+      this.session(stmt, 'write').then(() => acc(true))
+    )
   }
 
   async relate(node1, relation, node2, create = true) {
@@ -202,7 +201,7 @@ class Cypher {
     return this.session(stmt, 'write')
   }
 
-  async find() {
+  find() {
     const stmt = `${this.matchs.join(' ')} ${this.setString}
                   RETURN ${this.distinct} ${this.returnStrings.join(' , ')}
                   ${this.writeOrderBy()} ${this.skip ? `SKIP ${this.skip}` : ''} ${
@@ -213,11 +212,10 @@ class Cypher {
   }
 
   session(stmt, mode = 'read') {
-    return new Promise((resolve, reject) => {
+    return new SessionPromise(stmt, (resolve, reject) => {
       const session = database.session({
         defaultAccessMode: mode === 'read' ? getInstance().session.READ : getInstance().session.WRITE,
       })
-      // console.log('stmt', stmt)
       session
         .run(stmt)
         .then((result) => resolve(result.records))
@@ -227,6 +225,25 @@ class Cypher {
           session.close()
         })
     })
+  }
+}
+
+class SessionPromise {
+  constructor(stmt, executor) {
+    this.executor = executor
+    this.stmt = stmt
+  }
+
+  toString() {
+    return this.stmt
+  }
+
+  then(...args) {
+    return new Promise(this.executor).then(...args)
+  }
+
+  catch(...args) {
+    return new Promise(this.executor).catch(...args)
   }
 }
 

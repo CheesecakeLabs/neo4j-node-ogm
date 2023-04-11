@@ -206,6 +206,15 @@ const users = await User.findAll() //return Collection
 await users.deleteAll()
 ```
 
+
+#### Getting the Query as string
+
+The model `findAll`, `findBy`, `findById`, `save` and `delete` methods are lazy and will only be executed if they are `awaited`. You can retrieve the query that will be generated in the string format using the `toString` method
+
+```js
+console.log(User.findAll().toString()) // The database does not get hit. Logs: MATCH (user:User) RETURN  user {id:id(user), .name, .language, .email, .active, .password, .created_at }
+```
+
 ## API
 
 **Collection functions:**

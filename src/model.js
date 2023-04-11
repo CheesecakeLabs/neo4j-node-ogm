@@ -175,7 +175,7 @@ class Model {
     })
   }
 
-  async delete(detach = false) {
+  delete(detach = false) {
     this.cypher = new Cypher()
     this.filter_attributes = [
       {
@@ -225,17 +225,20 @@ class Model {
     return ret
   }
 
-  async save() {
+  save() {
     this.cypher = new Cypher()
     if (this.id === undefined) {
       // create
       this.doMatchs(this, false)
-
+      try {
       this.setAttributes(false)
-
-      const record = await this.cypher.create(this.getCypherName())
-
-      hydrate(this, record, this._with)
+      } catch (err) {
+        return Promise.reject(err)
+      }
+      const recordPromise = this.cypher.create(this.getCypherName())
+      return new ModelPromise(recordPromise, (acc) =>
+        recordPromise.then(record => acc(hydrate(this, record, this._with)))
+      )
     } else {
       // update
       this.cypher.addWhere({
@@ -247,9 +250,10 @@ class Model {
 
       this.setAttributes()
 
-      const record = await this.cypher.update()
-
-      hydrate(this, record[0], this._with)
+      const recordPromise = this.cypher.update()
+      return new ModelPromise(recordPromise, (acc) =>
+        recordPromise.then(records => acc(hydrate(this, records[0], this._with)))
+      )
     }
   }
 
@@ -396,7 +400,7 @@ class Model {
     }
   }
 
-  static async findByID(id, config = {}) {
+  static findByID(id, config = {}) {
     const self = new this()
 
     config.filter_attributes = [
@@ -406,16 +410,16 @@ class Model {
       },
     ].concat(config.filter_attributes)
 
-    const data = await this.findAll(config)
-    return data.first()
+    const sessionPromise = this.findAll(config)
+    return new ModelPromise(sessionPromise, (acc) => sessionPromise.then(data => acc(data.first())))
   }
 
-  static async findBy(filter_attributes = [], config = {}) {
+  static findBy(filter_attributes = [], config = {}) {
     config.filter_attributes = filter_attributes
     return this.findAll(config)
   }
 
-  static async findAll(config = {}) {
+  static findAll(config = {}) {
     let self
     if (!config.parent) {
       self = new this(undefined, config.state)
@@ -476,30 +480,31 @@ class Model {
     self.doMatchs(self, false, 0)
     self.writeOrderBy()
 
-    const data = await self.cypher.find()
+    const dataPromise = self.cypher.find()
+    return new ModelPromise(dataPromise, (resolve) =>
+      dataPromise.then((data) => {
+        const result = new Collection()
+        const ids = []
+        data.forEach((record) => {
+          let model = new this(undefined, config.state)
+          model._state = config.state
+          const main = record._fields[record._fieldLookup[model.getAliasName()]]
+          const id = convertID(main.id)
 
-    const result = new Collection()
-    const ids = []
-    data.forEach((record) => {
-      let model = new this(undefined, config.state)
-      model._state = config.state
-      const main = record._fields[record._fieldLookup[model.getAliasName()]]
-      const id = convertID(main.id)
+          if (config.parent) {
+            model = config.parent
+          } else {
+            if (ids.includes(id)) {
+              model = result[ids.indexOf(id)]
+            } else {
+              ids.push(id)
+            }
+          }
 
-      if (config.parent) {
-        model = config.parent
-      } else {
-        if (ids.includes(id)) {
-          model = result[ids.indexOf(id)]
-        } else {
-          ids.push(id)
-        }
-      }
-
-      result[ids.indexOf(id)] = hydrate(model, record, self._with)
-    })
-
-    return result
+          result[ids.indexOf(id)] = hydrate(model, record, self._with)
+        })
+        resolve(result)
+    }))
   }
 
   prepareFilter(fa, model) {
@@ -517,6 +522,25 @@ class Model {
       fa.attr = fa.key.split('.').length > 1 ? fa.key : `${model.getAliasName()}.${fa.key}`
     }
     return fa
+  }
+}
+
+class ModelPromise  {
+  constructor(session, executor) {
+    this.executor = executor
+    this.session = session
+  }
+
+  toString() {
+    return this.session.toString()
+  }
+
+  then(...args) {
+    return new Promise(this.executor).then(...args)
+  }
+
+  catch(...args) {
+    return new Promise(this.executor).catch(...args)
   }
 }
 

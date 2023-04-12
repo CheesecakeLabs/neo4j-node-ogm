@@ -419,6 +419,47 @@ class Model {
     return this.findAll(config)
   }
 
+  static async count(config = {}) {
+    let self
+    if (!config.parent) {
+      self = new this(undefined, config.state)
+      self._state = config.state
+    } else {
+      self = config.parent
+      self.parent = true
+    }
+
+    Object.keys(config).forEach((key) => {
+      config[key] === undefined && delete config[key]
+    })
+    config = Object.assign(
+      {
+        with_related: [],
+        filter_attributes: [],
+        onlyRelation: false,
+        order_by: [],
+        skip: '',
+        limit: '',
+        count: '*',
+        optional: true,
+        state: undefined,
+      },
+      config,
+    )
+
+    config.with_related.forEach((item) => {
+      const w = item.split('__')
+      self._with.push(w)
+    })
+    self.cypher = new Cypher()
+    self.cypher.count = config.count
+
+    self.filter_attributes = config.filter_attributes.map((fa) => self.prepareFilter(fa, self))
+    self.doMatchs(self, false, 0)
+    const data = await self.cypher.find()
+    return convertID(data[0]._fields[0])
+  }
+
   static findAll(config = {}) {
     let self
     if (!config.parent) {

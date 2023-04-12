@@ -167,6 +167,13 @@ const users = User.findBy([
 })
 ```
 
+#### Count
+
+```js
+//returns the number of values or rows
+const users = User.count({ count: 'name' })
+```
+
 #### Creating
 
 ```js
@@ -254,6 +261,7 @@ User.findAll({
 - findAll({ with_related, filter_attributes, order_by, skip, limit }) - return a Node's Collection
 - findBy(filter_attributes, { with_related, order_by, skip, limit }) - return a Node's Collection
 - findByID(Integer id, { with_related, order_by }) - return a Node
+- count({ with_related, filter_attributes, count? }) - return a Node with a count value
 
 **Model async functions:**
 

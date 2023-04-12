@@ -457,7 +457,7 @@ class Model {
     self.filter_attributes = config.filter_attributes.map((fa) => self.prepareFilter(fa, self))
     self.doMatchs(self, false, 0)
     const data = await self.cypher.find()
-    return new Model({ count: convertID(data[0]._fields[0] )}, ['COUNT'])
+    return convertID(data[0]._fields[0])
   }
 
   static findAll(config = {}) {

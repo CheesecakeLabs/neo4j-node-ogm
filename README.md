@@ -170,7 +170,7 @@ const users = User.findBy([
 #### Count
 
 ```js
-//return a model with a `count` value
+//returns the number of values or rows
 const users = User.count({ count: 'name' })
 ```
 

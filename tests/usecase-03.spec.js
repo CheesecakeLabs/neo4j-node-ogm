@@ -25,7 +25,7 @@ describe('Use Cases - 03', () => {
     it('should count', async () => {
         const expected = (await User.findAll()).length()
         const response = (await User.count())
-        expect(response.count).to.be.eql(expected)
+        expect(response).to.be.eql(expected)
     })
   })
   describe('::relationship', () => {

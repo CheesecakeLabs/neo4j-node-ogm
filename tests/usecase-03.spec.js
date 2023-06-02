@@ -49,9 +49,28 @@ describe('Use Cases - 03', () => {
       user
         .createRelationship('role', role)
         .then(() => {
+          console.log('antes')
           expect(user.role.key).to.be.equal('key-ADMIN')
         })
         .then(() => done(), done)
+    })
+
+
+    it('get filtering with nested filters relations', async () => {
+      await user.createRelationship('role', role)
+      const users = await User.findAll({
+        with_related: ['role'],
+        filter_attributes: [{
+          $or: [
+            { $and: [
+              { key: 'active', value: true},
+              { key: 'role.key', value: 'key-ADMIN' },
+            ]},
+            { key: 'id', value: user.id},
+          ]}
+        ]
+      })
+      expect(users.first().email).to.be.equal(user.email)
     })
 
     it('relating with attributes', done => {

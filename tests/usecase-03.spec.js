@@ -49,7 +49,6 @@ describe('Use Cases - 03', () => {
       user
         .createRelationship('role', role)
         .then(() => {
-          console.log('antes')
           expect(user.role.key).to.be.equal('key-ADMIN')
         })
         .then(() => done(), done)

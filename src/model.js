@@ -101,10 +101,16 @@ class Model {
     return Object.entries(this._attributes)
   }
 
-  writeFilter(forNode, relationAlias = undefined) {
+  writeFilter(forNodes, relationAlias = undefined) {
     // FILTERS WITH LOCATION
-    this.filter_attributes
-      .filter((item) => item.for === forNode || item.for === relationAlias || item.$and || item.$or)
+    const filterRelationshipAttributes = items =>
+      items ? items.filter(item => item && (
+        forNodes.includes(item.for) ||
+        item.for === relationAlias ||
+        filterRelationshipAttributes(item.$and).length === item.$and?.length ||
+        filterRelationshipAttributes(item.$or).length === item.$or?.length
+    )) : []
+    filterRelationshipAttributes(this.filter_attributes)
       .forEach(({ attr, operator, value, $and, $or }) => {
         this.cypher.addWhere({ attr, operator, value, $and, $or })
       })
@@ -118,7 +124,7 @@ class Model {
     })
   }
 
-  doMatchs(node, relation, level = 0) {
+  doMatchs(node, relation, relatedNode = []) {
     if (relation) {
       this.cypher.match(relation.previousNode, relation.previousAlias, relation.relationship, node)
       this.cypher.modelReturn(relation.previousAlias, node)
@@ -127,11 +133,13 @@ class Model {
       this.cypher.modelReturn(node.getAliasName(), node)
     }
 
-    this.writeFilter(node.getAliasName(), `${relation?.previousNode?.getAliasName()}_${relation?.previousAlias}`)
+    const nodesAliases = [...relatedNode, node.getAliasName()]
+    this.writeFilter(nodesAliases, `${relation?.previousNode?.getAliasName()}_${relation?.previousAlias}`)
 
     Object.keys(node._attributes).forEach((key) => {
       const field = node._attributes[key]
       if (field.isModel) {
+        const level = relatedNode.length
         const [found_condition, isOptional] = checkWith(level, key, this._with)
         if (found_condition) {
           const newNode = new field.target(undefined, node._state)
@@ -147,7 +155,7 @@ class Model {
               previousNode: node,
               previousAlias: key,
             },
-            level + 1
+            nodesAliases
           )
         }
       }
@@ -160,7 +168,7 @@ class Model {
     this.cypher.match(node, false, false, false, field.attr)
     this.cypher.modelReturn(field.attr, node)
     this.cypher.modelReturnRelation(field.relationName, field)
-    this.writeFilter(field.attr, `${node.getAliasName()}_${field.attr}`)
+    this.writeFilter([field.attr], `${node.getAliasName()}_${field.attr}`)
   }
 
   async fetch(with_related = [], state = undefined) {
@@ -455,7 +463,7 @@ class Model {
     self.cypher.count = config.count
 
     self.filter_attributes = config.filter_attributes.map((fa) => self.prepareFilter(fa, self))
-    self.doMatchs(self, false, 0)
+    self.doMatchs(self, false, [])
     const data = await self.cypher.find()
     return convertID(data[0]._fields[0])
   }
@@ -518,7 +526,7 @@ class Model {
 
       return ob
     })
-    self.doMatchs(self, false, 0)
+    self.doMatchs(self, false, [])
     self.writeOrderBy()
 
     const dataPromise = self.cypher.find()

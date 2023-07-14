@@ -31,6 +31,7 @@ class Role extends Model {
           language: state.language,
         },
       }),
+      active: Field.Boolean({ default: true }),
     }
     super(values, labels, attributes)
   }

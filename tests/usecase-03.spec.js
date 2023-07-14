@@ -54,6 +54,49 @@ describe('Use Cases - 03', () => {
         .then(() => done(), done)
     })
 
+
+    it('get filtering with nested filters relations', async () => {
+      const query =  User.findAll({
+        with_related: ['!role'],
+        filter_attributes: [
+          {
+          $and: [
+            { $and: [
+              { key: 'active', value: true},
+              { key: 'role.key', value: 'ADMIN' },
+            ]},
+            { key: 'id(user)', value: user.id},
+          ]}
+        ]
+      })
+      const users = await query
+      expect(query.toString()).to.be.equal(`MATCH (user:User)   MATCH (user)-[user_role:HAS_ROLE ]-(role:Role)  WHERE (( user.active = $param1 AND  role.key = $param2) AND  id(user) = $param3) 
+                  RETURN  user {id:id(user), .name, .language, .email, .active, .password, .created_at } , user_role { } , collect(role {id:id(role), .key, .active })[0] as role
+                    `)
+      expect(users.first().email).to.be.equal(user.email)
+    })
+
+    it('get filtering with nested filters relations - equal field names', async () => {
+      const query =  User.findAll({
+        with_related: ['!role'],
+        filter_attributes: [
+          {
+          $and: [
+            { $and: [
+              { key: 'active', value: true},
+              { key: 'role.active', value: true },
+            ]},
+            { key: 'id(user)', value: user.id},
+          ]}
+        ]
+      })
+      const users = await query
+      expect(query.toString()).to.be.equal(`MATCH (user:User)   MATCH (user)-[user_role:HAS_ROLE ]-(role:Role)  WHERE (( user.active = $param1 AND  role.active = $param2) AND  id(user) = $param3) 
+                  RETURN  user {id:id(user), .name, .language, .email, .active, .password, .created_at } , user_role { } , collect(role {id:id(role), .key, .active })[0] as role
+                    `)
+      expect(users.first().email).to.be.equal(user.email)
+    })
+
     it('relating with attributes', done => {
       user
         .createRelationship('friends', user2, { intimacy: 'normal' })
@@ -61,6 +104,27 @@ describe('Use Cases - 03', () => {
           expect(user.toJSON().friends[0].intimacy).to.be.equal('normal')
         })
         .then(() => done(), done)
+    })
+
+    it('get filtering with nested filters relations - same model', async () => {
+      const query = User.findAll({
+        with_related: ['!friends'],
+        filter_attributes: [{
+          $and: [
+            { $and: [
+              { key: 'active', value: true},
+              { key: 'friends.active', value: false },
+              
+            ]},
+            { key: 'id(user)', value: user.id},
+          ]}
+        ]
+      })
+      const users = await query
+      expect(query.toString()).to.be.equal(`MATCH (user:User)   MATCH (user)-[user_friends:FRIENDSHIP ]-(friends:User)  WHERE (( user.active = $param1 AND  friends.active = $param2) AND  id(user) = $param3) 
+                  RETURN  user {id:id(user), .name, .language, .email, .active, .password, .created_at } , user_friends {.intimacy } , friends {id:id(friends), .name, .language, .email, .active, .password, .created_at }
+                    `)
+      expect(users.length()).to.be.equal(1)
     })
 
     it('update a relationship', done => {

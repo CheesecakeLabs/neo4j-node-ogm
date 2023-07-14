@@ -113,7 +113,7 @@ describe('Use Cases - 03', () => {
           $and: [
             { $and: [
               { key: 'active', value: true},
-              { key: 'friends.name', value: user2.name },
+              { key: 'friends.active', value: false },
               
             ]},
             { key: 'id(user)', value: user.id},
@@ -121,7 +121,7 @@ describe('Use Cases - 03', () => {
         ]
       })
       const users = await query
-      expect(query.toString()).to.be.equal(`MATCH (user:User)   MATCH (user)-[user_friends:FRIENDSHIP ]-(friends:User)  WHERE (( user.active = $param1 AND  friends.name = $param2) AND  id(user) = $param3) 
+      expect(query.toString()).to.be.equal(`MATCH (user:User)   MATCH (user)-[user_friends:FRIENDSHIP ]-(friends:User)  WHERE (( user.active = $param1 AND  friends.active = $param2) AND  id(user) = $param3) 
                   RETURN  user {id:id(user), .name, .language, .email, .active, .password, .created_at } , user_friends {.intimacy } , friends {id:id(friends), .name, .language, .email, .active, .password, .created_at }
                     `)
       expect(users.length()).to.be.equal(1)
